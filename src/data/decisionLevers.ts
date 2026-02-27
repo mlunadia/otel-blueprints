@@ -84,7 +84,7 @@ export const capabilityLevers: CapabilityLever[] = [
     id: 'needsInfraLogs',
     name: 'Infrastructure Logs',
     description: 'Collect logs from disk (container logs, system logs)',
-    impact: 'Requires DaemonSet agent with filelog receiver (not available on serverless K8s)',
+    impact: 'Requires DaemonSet agent with filelog receiver (not available on managed containers)',
     icon: 'HardDrive',
     category: 'infra-collection',
     isCollector: true,
@@ -93,7 +93,7 @@ export const capabilityLevers: CapabilityLever[] = [
     id: 'needsInfraMetrics',
     name: 'Infrastructure Metrics',
     description: 'Collect CPU, memory, disk, and network metrics from nodes',
-    impact: 'Requires DaemonSet agent with hostmetrics receiver (not available on serverless K8s)',
+    impact: 'Requires DaemonSet agent with hostmetrics receiver (not available on managed containers)',
     icon: 'Cpu',
     category: 'infra-collection',
     isCollector: true,
@@ -140,10 +140,10 @@ export interface ConstraintLever {
 
 export const constraintLevers: ConstraintLever[] = [
   {
-    id: 'serverlessKubernetes',
-    name: 'Serverless Kubernetes',
-    description: 'Running on Fargate, Cloud Run, or similar (no DaemonSets)',
-    impact: 'DaemonSet agents unavailable - must use Sidecar or Gateway-only patterns',
+    id: 'managedContainers',
+    name: 'Managed Containers',
+    description: 'ECS/Fargate, Azure Container Apps, or similar — no DaemonSets available',
+    impact: 'DaemonSet agents unavailable — must use Sidecar or Direct SDK patterns',
     icon: 'Cloud',
   },
   {

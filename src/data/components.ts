@@ -74,7 +74,7 @@ export const components: Component[] = [
       'Running in Kubernetes and need pod/node metadata',
     ],
     whenNotToUse: [
-      'Serverless environments where you cannot deploy agents',
+      'Managed container platforms where you cannot deploy agents',
       'When operational simplicity is the top priority',
       'Very resource-constrained environments',
     ],

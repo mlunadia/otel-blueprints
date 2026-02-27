@@ -43,7 +43,7 @@ export interface Requirements {
   dataLossPolicy: DataLossPolicy;
   
   // Environment constraints (Kubernetes-only)
-  serverlessKubernetes: boolean;
+  managedContainers: boolean;
   needsPerServiceIsolation: boolean;
 }
 
@@ -83,7 +83,7 @@ export const defaultRequirements: Requirements = {
   // Resilience
   dataLossPolicy: 'acceptable',
   // Constraints
-  serverlessKubernetes: false,
+  managedContainers: false,
   needsPerServiceIsolation: false,
 };
 
@@ -175,12 +175,12 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
         );
       }
     }
-  } else if (requirements.serverlessKubernetes) {
-    // Serverless K8s — no DaemonSet
+  } else if (requirements.managedContainers) {
     if (needsInfraCollection) {
       arch.warnings.push(
-        'Infrastructure collection (host metrics, disk logs) is unavailable on serverless Kubernetes. ' +
-        'DaemonSet agents cannot run on Fargate/Cloud Run. Consider using cloud provider metrics instead.'
+        'Infrastructure collection (host metrics, disk logs) is unavailable on managed container platforms. ' +
+        'DaemonSet agents cannot run on ECS/Fargate or Azure Container Apps. ' +
+        'Consider using cloud provider metrics instead.'
       );
     }
 

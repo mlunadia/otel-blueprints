@@ -169,7 +169,7 @@ export function HowItWorksPage() {
                 badgeClass="bg-green-500/20 text-green-400"
                 borderClass="border-green-500/40"
                 bgClass="bg-green-500/5"
-                description="One collector per pod. Provides per-service isolation and custom config. Works on serverless K8s (Fargate, Cloud Run)."
+                description="One collector per pod. Provides per-service isolation and custom config. Works on managed container platforms (ECS/Fargate, Azure Container Apps)."
                 detail={
                   <>Injected via the <code className="text-green-300">OpenTelemetry Operator</code> sidecar mode.
                   Each pod gets its own lightweight collector with custom pipelines. Can coexist with DaemonSet agents.</>

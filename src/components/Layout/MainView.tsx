@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Lightbulb, Search, Server } from 'lucide-react';
+import { ArrowLeft, DraftingCompass, Lightbulb, Play, Server } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useAppContext, Requirements } from '../../context/AppContext';
 import { EnvironmentType } from '../../data/composer';
@@ -90,7 +90,7 @@ export function MainView() {
                   selected={requirements.environmentType === 'host'}
                   onSelect={() => {
                     setRequirement('environmentType', 'host' as EnvironmentType);
-                    setRequirement('serverlessKubernetes', false as never);
+                    setRequirement('managedContainers', false as never);
                     setRequirement('needsPerServiceIsolation', false as never);
                   }}
                 />
@@ -141,8 +141,8 @@ export function MainView() {
                     signals={getCapabilitiesByCategory('infra-collection')}
                     requirements={requirements}
                     setRequirement={setRequirement}
-                    disabled={requirements.serverlessKubernetes}
-                    disabledReason="Not available on serverless Kubernetes"
+                    disabled={requirements.managedContainers}
+                    disabledReason="Not available on managed container platforms"
                   />
                 </motion.div>
               </div>
@@ -256,7 +256,7 @@ export function MainView() {
                         value={requirements[lever.id as keyof Requirements] as boolean}
                         onChange={(value) => {
                           setRequirement(lever.id as keyof Requirements, value as never);
-                          if (lever.id === 'serverlessKubernetes' && value) {
+                          if (lever.id === 'managedContainers' && value) {
                             setRequirement('needsInfraLogs', false as never);
                             setRequirement('needsInfraMetrics', false as never);
                           }
@@ -280,13 +280,13 @@ export function MainView() {
                 className="flex items-center gap-2 px-8 py-4 bg-[var(--otel-blue)] hover:bg-[var(--otel-dark-blue)] text-white font-semibold rounded-lg transition-colors text-lg"
               >
                 Build My Architecture
-                <ArrowRight size={20} />
+                <Play size={20} />
               </button>
               <button
                 onClick={() => setCurrentPage('how-it-works')}
                 className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
               >
-                <Search size={18} />
+                <DraftingCompass size={18} />
                 <span>Explore OpenTelemetry Blueprints</span>
               </button>
             </motion.div>
