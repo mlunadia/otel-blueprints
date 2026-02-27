@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
+import { useState, useRef, useCallback, createContext, useContext, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Server, Database, Zap, Box, Monitor, Layers, Network, GitBranch, HardDrive } from 'lucide-react';
 import { ComposedArchitecture } from '../../data/composer';
@@ -85,10 +85,9 @@ function ComponentTooltip({
   useEffect(() => {
     if (visible && anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
-      setPos({
-        top: rect.top + window.scrollY - 8,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
+      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
+    } else {
+      setPos(null);
     }
   }, [visible, anchorRef]);
 
@@ -148,20 +147,17 @@ function ComponentBox({
   delay?: number;
 }) {
   const [hovered, setHovered] = useState(false);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const elRef = useRef<HTMLDivElement>(null);
   const registerRef = useRegisterConnector(connectorId ?? '');
 
-  const combinedRef = useCallback(
-    (el: HTMLDivElement | null) => {
-      (tooltipRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-      if (connectorId) registerRef(el);
-    },
-    [connectorId, registerRef],
-  );
+  useEffect(() => {
+    if (connectorId && elRef.current) registerRef(elRef.current);
+    return () => { if (connectorId) registerRef(null); };
+  }, [connectorId, registerRef]);
 
   return (
     <motion.div
-      ref={combinedRef}
+      ref={elRef}
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.3 }}
@@ -169,7 +165,7 @@ function ComponentBox({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {tooltip && <ComponentTooltip data={tooltip} visible={hovered} anchorRef={tooltipRef} />}
+      {tooltip && <ComponentTooltip data={tooltip} visible={hovered} anchorRef={elRef} />}
       <div
         className={`flex items-center gap-2 rounded-lg border ${colorClass} px-3 py-2 transition-all duration-150 cursor-default w-full ${
           hovered ? 'shadow-lg scale-[1.02]' : ''

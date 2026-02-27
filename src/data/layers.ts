@@ -50,7 +50,7 @@ export const edgeLayers: Layer[] = [
     id: 'direct-sdk',
     type: 'edge',
     name: 'Direct SDK Export',
-    description: 'Applications export telemetry directly to the next tier (gateway or backend). No local collector.',
+    description: 'Applications export telemetry directly to the next tier (gateway or backend).',
     icon: 'Zap',
     requires: [],
     provides: [],

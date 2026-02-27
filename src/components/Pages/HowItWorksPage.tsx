@@ -342,10 +342,10 @@ export function HowItWorksPage() {
                 }
               >
                 <MiniComponentBox
-                  icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+                  icon={<CollectorIcon size={14} className="text-red-400" />}
                   label="Collector Pool"
                   sublabel="OTLP receiver → Kafka exporter"
-                  colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+                  colorClass="border-red-500/30 bg-red-500/5"
                 />
                 <MiniFlowConnector dashed />
                 <MiniComponentBox
@@ -356,10 +356,10 @@ export function HowItWorksPage() {
                 />
                 <MiniFlowConnector dashed />
                 <MiniComponentBox
-                  icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+                  icon={<CollectorIcon size={14} className="text-red-400" />}
                   label="Collector Pool"
                   sublabel="Kafka receiver → OTLP exporter"
-                  colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+                  colorClass="border-red-500/30 bg-red-500/5"
                 />
               </ModuleCard>
             </div>
