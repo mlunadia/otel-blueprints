@@ -282,13 +282,24 @@ export function MainView() {
                 Build My Architecture
                 <Play size={20} />
               </button>
-              <button
-                onClick={() => setCurrentPage('how-it-works')}
-                className="flex items-center gap-2 text-[#f5a800] hover:text-[#d99200] transition-colors"
-              >
-                <DraftingCompass size={18} />
-                <span>Explore OpenTelemetry Blueprints</span>
-              </button>
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => setCurrentPage('how-it-works')}
+                  className="flex items-center gap-2 text-[#f5a800] hover:text-[#d99200] transition-colors"
+                >
+                  <DraftingCompass size={18} />
+                  <span>Explore OpenTelemetry Blueprints</span>
+                </button>
+                <a
+                  href="https://mlunadia.github.io/visual-otel/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
+                >
+                  <Icons.Eye size={18} />
+                  <span>OpenTelemetry Visual Guide</span>
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         ) : (
