@@ -366,7 +366,7 @@ function ThreePositionSlider({ lever, value, onChange }: ThreePositionSliderProp
         <motion.div
           className="absolute top-0 left-2 h-2 bg-[var(--otel-blue)] rounded-full"
           initial={false}
-          animate={{ width: `calc(${(currentIndex / 2) * 100}% - ${currentIndex === 0 ? 0 : 8}px)` }}
+          animate={{ width: currentIndex === 0 ? 0 : `calc(${(currentIndex / 2) * 100}% - 16px)` }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         />
 
