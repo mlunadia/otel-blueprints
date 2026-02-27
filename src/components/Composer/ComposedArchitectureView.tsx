@@ -18,19 +18,28 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
   const handleDownloadImage = useCallback(async () => {
     if (!diagramRef.current) return;
     try {
+      const env = architecture.requirements.environmentType === 'kubernetes' ? 'k8s' : 'vm';
+      const edge = architecture.edge.map(e => e.id.replace(/-agent$/, '')).join('-');
+      const parts = ['otel-blueprint', env, edge];
+      if (architecture.processing.some(p => p.id === 'gateway-pool')) parts.push('gw');
+      if (architecture.processing.some(p => p.id === 'sampling-tier')) parts.push('sampling');
+      if (architecture.buffering.id === 'kafka-buffer') parts.push('kafka');
+      else if (architecture.buffering.id === 'persistent-queue') parts.push('wal');
+      const filename = parts.join('-') + '.jpg';
+
       const dataUrl = await toJpeg(diagramRef.current, {
         quality: 0.95,
         backgroundColor: '#1a1a2e',
         pixelRatio: 2,
       });
       const link = document.createElement('a');
-      link.download = 'otel-architecture.jpg';
+      link.download = filename;
       link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error('Failed to export image:', err);
     }
-  }, []);
+  }, [architecture]);
 
   const handleSubmitFeedback = useCallback(() => {
     const summary = [

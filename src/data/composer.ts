@@ -158,7 +158,6 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
   const needsInfraCollection = requirements.needsInfraLogs || requirements.needsInfraMetrics;
 
   if (requirements.environmentType === 'host') {
-    // Host / VM environment — standalone collector, no DaemonSet or Sidecar
     if (needsInfraCollection) {
       arch.edge.push(getLayer('host-agent')!);
       arch.recommendations.push(
@@ -166,12 +165,15 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
         'and local logs (filelog receiver). Applications export to localhost:4317.'
       );
     } else {
-      // No infra collection — still recommend a local agent for buffering
-      arch.edge.push(getLayer('host-agent')!);
-      arch.recommendations.push(
-        'A local host agent is recommended even without infrastructure collection — it provides ' +
-        'buffering, retry, and resource detection for application telemetry.'
-      );
+      arch.edge.push(getLayer('direct-sdk')!);
+      if (requirements.needsAppLogs) {
+        arch.recommendations.push(
+          'For log collection without a local agent, the recommended pattern is for applications to write logs ' +
+          'to stdout/stderr. A collector with the filelog receiver can then be introduced later to tail container ' +
+          'or journal logs from disk, providing structured ingestion, batching, and retry without requiring ' +
+          'application changes.'
+        );
+      }
     }
   } else if (requirements.serverlessKubernetes) {
     // Serverless K8s — no DaemonSet
@@ -212,6 +214,14 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
     // Default to direct SDK if no edge collector needed
     if (arch.edge.length === 0) {
       arch.edge.push(getLayer('direct-sdk')!);
+      if (requirements.needsAppLogs) {
+        arch.recommendations.push(
+          'For log collection without a local agent, the recommended pattern is for applications to write logs ' +
+          'to stdout. A DaemonSet collector with the filelog receiver can then be introduced to tail container ' +
+          'logs from each node, providing structured ingestion, batching, and retry without requiring ' +
+          'application changes.'
+        );
+      }
     }
   }
 }
