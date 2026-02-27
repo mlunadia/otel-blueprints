@@ -42,7 +42,7 @@ export function MainView() {
                 transition={{ delay: 0.1 }}
                 className="text-[var(--text-secondary)]"
               >
-                Select your requirements to create an architecture that can generate an OTel blueprints composed diagram
+                Select your requirements to generate your OpenTelemetry blueprint
               </motion.p>
             </div>
 
