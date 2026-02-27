@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Lightbulb, CheckCircle, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { AlertTriangle, Lightbulb, CheckCircle, Copy, Check, Download, MessageSquare } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+import { toJpeg } from 'html-to-image';
 import { ComposedArchitecture, getArchitectureCapabilities } from '../../data/composer';
 import { VisualPipelineDiagram } from './VisualPipelineDiagram';
 import { LayerCard } from './LayerCard';
@@ -11,7 +12,45 @@ interface ComposedArchitectureViewProps {
 
 export function ComposedArchitectureView({ architecture }: ComposedArchitectureViewProps) {
   const [copiedAll, setCopiedAll] = useState(false);
+  const diagramRef = useRef<HTMLDivElement>(null);
   const capabilities = getArchitectureCapabilities(architecture);
+
+  const handleDownloadImage = useCallback(async () => {
+    if (!diagramRef.current) return;
+    try {
+      const dataUrl = await toJpeg(diagramRef.current, {
+        quality: 0.95,
+        backgroundColor: '#1a1a2e',
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = 'otel-architecture.jpg';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to export image:', err);
+    }
+  }, []);
+
+  const handleSubmitFeedback = useCallback(() => {
+    const summary = [
+      `Environment: ${architecture.requirements.environmentType}`,
+      `Volume: ${architecture.volumeProfile.tier}`,
+      `Edge: ${architecture.edge.map(e => e.name).join(', ')}`,
+      `Processing: ${architecture.processing.filter(p => p.id !== 'none').map(p => p.name).join(', ') || 'None'}`,
+      `Buffering: ${architecture.buffering.name}`,
+      `Complexity: ${architecture.complexity}`,
+    ].join('\n');
+
+    const body = encodeURIComponent(
+      `## Architecture Feedback\n\n### Generated Architecture\n\`\`\`\n${summary}\n\`\`\`\n\n### Feedback\n<!-- Describe what could be improved or any general comments -->\n\n`,
+    );
+    const title = encodeURIComponent('Architecture feedback');
+    window.open(
+      `https://github.com/mlunadia/otel-blueprints/issues/new?title=${title}&body=${body}&labels=feedback`,
+      '_blank',
+    );
+  }, [architecture]);
 
   const handleCopyAllConfigs = async () => {
     const allConfigs: string[] = [];
@@ -57,9 +96,30 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-6"
       >
-        <VisualPipelineDiagram architecture={architecture} />
+        <div
+          ref={diagramRef}
+          className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-6"
+        >
+          <VisualPipelineDiagram architecture={architecture} />
+        </div>
+
+        <div className="flex items-center gap-4 mt-3 px-1">
+          <button
+            onClick={handleDownloadImage}
+            className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
+          >
+            <Download size={14} />
+            <span>Download image</span>
+          </button>
+          <button
+            onClick={handleSubmitFeedback}
+            className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
+          >
+            <MessageSquare size={14} />
+            <span>Submit feedback</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Warnings */}

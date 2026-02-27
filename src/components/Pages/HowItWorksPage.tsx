@@ -27,7 +27,7 @@ export function HowItWorksPage() {
           className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-6"
         >
           <ArrowLeft size={18} />
-          <span>Back to advisor</span>
+          <span>Back to requirements</span>
         </button>
 
         {/* Header */}
