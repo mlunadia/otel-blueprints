@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Lightbulb, CheckCircle, Copy, Check, Download, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Lightbulb, CheckCircle, Copy, Check, Download, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 import { toJpeg } from 'html-to-image';
 import { ComposedArchitecture, getArchitectureCapabilities } from '../../data/composer';
@@ -108,8 +108,11 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
       >
         <div
           ref={diagramRef}
-          className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-6"
+          className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-6 relative"
         >
+          <span className="absolute top-2 right-3 text-[10px] text-[var(--text-secondary)] opacity-50">
+            mlunadia.github.io/otel-blueprints
+          </span>
           <VisualPipelineDiagram architecture={architecture} />
         </div>
 
@@ -125,7 +128,10 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
             onClick={handleSubmitFeedback}
             className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
           >
-            <MessageSquare size={14} />
+            <span className="flex items-center">
+              <ThumbsUp size={12} />
+              <ThumbsDown size={12} className="ml-0.5" />
+            </span>
             <span>Submit feedback</span>
           </button>
         </div>
