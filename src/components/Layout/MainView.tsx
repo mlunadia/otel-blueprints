@@ -305,7 +305,7 @@ export function MainView() {
               className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-6"
             >
               <ArrowLeft size={18} />
-              <span>Modify requirements</span>
+              <span>Back to requirements</span>
             </motion.button>
 
             {/* Composed Architecture View */}
