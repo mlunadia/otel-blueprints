@@ -168,10 +168,9 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
       arch.edge.push(getLayer('direct-sdk')!);
       if (requirements.needsAppLogs) {
         arch.recommendations.push(
-          'For log collection without a local agent, the recommended pattern is for applications to write logs ' +
-          'to stdout/stderr. A collector with the filelog receiver can then be introduced later to tail container ' +
-          'or journal logs from disk, providing structured ingestion, batching, and retry without requiring ' +
-          'application changes.'
+          'It is recommended to write logs to stdout and use a DaemonSet OpenTelemetry Collector to tail container ' +
+          'log files with the filelog receiver and export via OTLP, ensuring buffering, batching, retry, and ' +
+          'backpressure outside the application lifecycle.'
         );
       }
     }
@@ -216,10 +215,9 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
       arch.edge.push(getLayer('direct-sdk')!);
       if (requirements.needsAppLogs) {
         arch.recommendations.push(
-          'For log collection without a local agent, the recommended pattern is for applications to write logs ' +
-          'to stdout. A DaemonSet collector with the filelog receiver can then be introduced to tail container ' +
-          'logs from each node, providing structured ingestion, batching, and retry without requiring ' +
-          'application changes.'
+          'It is recommended to write logs to stdout and use a DaemonSet OpenTelemetry Collector to tail container ' +
+          'log files with the filelog receiver and export via OTLP, ensuring buffering, batching, retry, and ' +
+          'backpressure outside the application lifecycle.'
         );
       }
     }
