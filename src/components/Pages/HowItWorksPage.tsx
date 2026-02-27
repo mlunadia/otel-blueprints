@@ -208,17 +208,17 @@ export function HowItWorksPage() {
               >
                 <MiniNodeBox label="Host" icon={<Monitor size={10} className="text-green-400/70" />} colorClass="border-green-500/30">
                   <MiniComponentBox
-                    icon={<Zap size={14} className="text-blue-400" />}
+                    icon={<Zap size={14} className="text-green-400" />}
                     label="Application"
                     sublabel="OTel SDK"
-                    colorClass="border-blue-500/30 bg-blue-500/5"
+                    colorClass="border-green-500/30 bg-green-500/5"
                   />
                   <MiniFlowConnector label="OTLP" />
                   <MiniComponentBox
-                    icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+                    icon={<CollectorIcon size={14} className="text-green-400" />}
                     label="Host Agent"
                     sublabel="systemd service"
-                    colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+                    colorClass="border-green-500/30 bg-green-500/5"
                   />
                 </MiniNodeBox>
               </ModuleCard>
