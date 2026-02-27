@@ -137,7 +137,7 @@ export function MainView() {
                       : 'Telemetry collected from Kubernetes nodes via DaemonSet agent'
                     }
                     icon="Server"
-                    color="green"
+                    color="orange"
                     signals={getCapabilitiesByCategory('infra-collection')}
                     requirements={requirements}
                     setRequirement={setRequirement}
@@ -501,7 +501,7 @@ interface CollectionBoxProps {
   title: string;
   description: string;
   icon: string;
-  color: 'blue' | 'green';
+  color: 'blue' | 'green' | 'orange';
   signals: typeof capabilityLevers;
   requirements: Requirements;
   setRequirement: <K extends keyof Requirements>(key: K, value: Requirements[K]) => void;
@@ -538,6 +538,14 @@ function CollectionBox({
       text: 'text-green-400',
       toggle: 'bg-green-500',
       dot: 'bg-green-500',
+    },
+    orange: {
+      border: 'border-[#f5a800]/30',
+      activeBorder: 'border-[#f5a800]',
+      bg: 'bg-[#f5a800]/5',
+      text: 'text-[#f5a800]',
+      toggle: 'bg-[#f5a800]',
+      dot: 'bg-[#f5a800]',
     },
   };
   

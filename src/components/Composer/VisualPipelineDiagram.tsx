@@ -455,16 +455,16 @@ function DiagramLegend({ hasKafka, hasLoadBalancer, hasSampling }: { hasKafka: b
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] text-[var(--text-secondary)] pt-4 border-t border-[var(--border-color)]/30 mt-4">
       <div className="flex items-center gap-1.5">
-        <Zap size={12} className="text-blue-400" />
+        <Zap size={12} className="text-green-400" />
         <span>Application</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <CollectorIcon size={12} className="text-[var(--otel-blue)]" />
+        <CollectorIcon size={12} className="text-green-400" />
         <span>OTel Collector</span>
       </div>
       {hasLoadBalancer && (
         <div className="flex items-center gap-1.5">
-          <Network size={12} className="text-amber-400" />
+          <Network size={12} className="text-orange-400" />
           <span>Load Balancer</span>
         </div>
       )}
@@ -497,7 +497,7 @@ function DiagramLegend({ hasKafka, hasLoadBalancer, hasSampling }: { hasKafka: b
       </div>
       {hasSampling && (
         <div className="flex items-center gap-1.5">
-          <div className="w-4 h-3 rounded border border-dashed border-purple-500/50" />
+          <div className="w-4 h-3 rounded border border-dashed border-orange-500/50" />
           <span>Tail sampling group</span>
         </div>
       )}
@@ -536,10 +536,10 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
           delay={0.1}
         >
           <ComponentBox
-            icon={<Zap size={14} className="text-blue-400" />}
+            icon={<Zap size={14} className="text-green-400" />}
             label="Application"
             sublabel="OTel SDK"
-            colorClass="border-blue-500/30 bg-blue-500/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={directSDKLayer ? getLayerTooltip(directSDKLayer) : {
               title: 'Application',
               description: 'Your services instrumented with the OpenTelemetry SDK, exporting telemetry to the local collector via OTLP on localhost:4317.',
@@ -549,10 +549,10 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
           <VerticalFlowConnector label="OTLP" delay={0.17} />
           <ComponentBox
             connectorId="edge-out"
-            icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+            icon={<CollectorIcon size={14} className="text-green-400" />}
             label="Host Agent"
             sublabel="systemd service"
-            colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={hostAgentLayer ? getLayerTooltip(hostAgentLayer) : undefined}
             delay={0.2}
           />
@@ -566,16 +566,16 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
       {hasDaemonSet && (
         <NodeBox
           label="Node"
-          icon={<Server size={10} className="text-blue-400/70" />}
-          colorClass="border-blue-500/30"
+          icon={<Server size={10} className="text-green-400/70" />}
+          colorClass="border-green-500/30"
           delay={0.1}
           scaleHint="× N nodes"
         >
           <ComponentBox
-            icon={<Zap size={14} className="text-blue-400" />}
+            icon={<Zap size={14} className="text-green-400" />}
             label="Application"
             sublabel="OTel SDK"
-            colorClass="border-blue-500/30 bg-blue-500/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={{
               title: 'Application',
               description: 'Your services instrumented with the OpenTelemetry SDK, exporting to the DaemonSet agent via OTLP on localhost:4317.',
@@ -585,10 +585,10 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
           <VerticalFlowConnector label="OTLP" delay={0.17} />
           <ComponentBox
             connectorId={hasSidecar ? 'edge-out-ds' : 'edge-out'}
-            icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+            icon={<CollectorIcon size={14} className="text-green-400" />}
             label="DaemonSet Agent"
             sublabel="Per-node collector"
-            colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={daemonSetLayer ? getLayerTooltip(daemonSetLayer) : undefined}
             delay={0.2}
           />
@@ -598,16 +598,16 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
       {hasSidecar && (
         <NodeBox
           label="Pod"
-          icon={<Box size={10} className="text-purple-400/70" />}
-          colorClass="border-purple-500/30"
+          icon={<Box size={10} className="text-green-400/70" />}
+          colorClass="border-green-500/30"
           delay={0.15}
           scaleHint="× N pods"
         >
           <ComponentBox
-            icon={<Zap size={14} className="text-blue-400" />}
+            icon={<Zap size={14} className="text-green-400" />}
             label="Application"
             sublabel="OTel SDK"
-            colorClass="border-blue-500/30 bg-blue-500/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={{
               title: 'Application',
               description: 'Your service with a co-located sidecar collector for per-service isolation. Exports via OTLP on localhost:4317.',
@@ -617,10 +617,10 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
           <VerticalFlowConnector label="OTLP" delay={0.22} />
           <ComponentBox
             connectorId={hasDaemonSet ? 'edge-out-sc' : 'edge-out'}
-            icon={<CollectorIcon size={14} className="text-purple-400" />}
+            icon={<CollectorIcon size={14} className="text-green-400" />}
             label="Sidecar Agent"
             sublabel="Per-pod collector"
-            colorClass="border-purple-500/30 bg-purple-500/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={sidecarLayer ? getLayerTooltip(sidecarLayer) : undefined}
             delay={0.25}
           />
@@ -630,17 +630,17 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
       {hasDirectSDK && !hasDaemonSet && !hasSidecar && (
         <NodeBox
           label="Pod"
-          icon={<Box size={10} className="text-blue-400/70" />}
-          colorClass="border-blue-500/30"
+          icon={<Box size={10} className="text-green-400/70" />}
+          colorClass="border-green-500/30"
           delay={0.1}
           scaleHint="× N pods"
         >
           <ComponentBox
             connectorId="edge-out"
-            icon={<Zap size={14} className="text-blue-400" />}
+            icon={<Zap size={14} className="text-green-400" />}
             label="Application"
             sublabel="OTel SDK → direct export"
-            colorClass="border-blue-500/30 bg-blue-500/5"
+            colorClass="border-green-500/30 bg-green-500/5"
             tooltip={directSDKLayer ? getLayerTooltip(directSDKLayer) : undefined}
             delay={0.15}
           />
@@ -693,10 +693,10 @@ function ProcessingSection({
         <>
           <ComponentBox
             connectorId="proc-kafka-producer"
-            icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+            icon={<CollectorIcon size={14} className="text-red-400" />}
             label="Collector Pool"
             sublabel="OTLP receiver → Kafka exporter"
-            colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+            colorClass="border-red-500/30 bg-red-500/5"
             tooltip={{
               title: 'Kafka Producer Collectors',
               description: 'Pool of collectors that receive telemetry via OTLP and write to Kafka topics. Provides buffering and decoupling from downstream processing.',
@@ -726,10 +726,10 @@ function ProcessingSection({
           <VerticalFlowConnector dashed delay={nextDelay()} />
           <ComponentBox
             connectorId="proc-kafka-consumer"
-            icon={<CollectorIcon size={14} className="text-[var(--otel-blue)]" />}
+            icon={<CollectorIcon size={14} className="text-red-400" />}
             label="Collector Pool"
             sublabel="Kafka receiver → OTLP exporter"
-            colorClass="border-[var(--otel-blue)]/30 bg-[var(--otel-blue)]/5"
+            colorClass="border-red-500/30 bg-red-500/5"
             tooltip={{
               title: 'Kafka Consumer Collectors',
               description: 'Pool of collectors that consume from Kafka topics and forward telemetry via OTLP to downstream processing or directly to the backend.',
@@ -747,10 +747,10 @@ function ProcessingSection({
         <>
           <ComponentBox
             connectorId="proc-lb"
-            icon={<Network size={14} className="text-amber-400" />}
+            icon={<Network size={14} className="text-orange-400" />}
             label="Load Balancer"
             sublabel={architecture.volumeProfile.loadBalancerType}
-            colorClass="border-amber-500/30 bg-amber-500/5"
+            colorClass="border-orange-500/30 bg-orange-500/5"
             tooltip={{
               title: 'Load Balancer',
               description: architecture.volumeProfile.tier === 'high'
@@ -770,16 +770,16 @@ function ProcessingSection({
         <>
           <NodeBox
             label="Tail Sampling"
-            icon={<GitBranch size={10} className="text-purple-400/70" />}
-            colorClass="border-purple-500/30"
+            icon={<GitBranch size={10} className="text-orange-400/70" />}
+            colorClass="border-orange-500/30"
             delay={nextDelay()}
           >
             <ComponentBox
               connectorId="proc-lb-exporter"
-              icon={<CollectorIcon size={14} className="text-purple-400" />}
+              icon={<CollectorIcon size={14} className="text-orange-400" />}
               label="LB Exporter"
               sublabel="loadbalancingexporter (traceID)"
-              colorClass="border-purple-500/30 bg-purple-500/5"
+              colorClass="border-orange-500/30 bg-orange-500/5"
               tooltip={{
                 title: 'Load-Balancing Exporter',
                 description: 'First tier of the tail sampling setup. Uses the loadbalancingexporter with routing_key: traceID to ensure all spans of a trace reach the same sampling collector.',
@@ -793,10 +793,10 @@ function ProcessingSection({
             <VerticalFlowConnector delay={nextDelay()} />
             <ComponentBox
               connectorId="proc-sampling"
-              icon={<CollectorIcon size={14} className="text-purple-400" />}
+              icon={<CollectorIcon size={14} className="text-orange-400" />}
               label="Sampling Collectors"
               sublabel="tail_sampling processor"
-              colorClass="border-purple-500/30 bg-purple-500/5"
+              colorClass="border-orange-500/30 bg-orange-500/5"
               tooltip={samplingLayer ? {
                 ...getLayerTooltip(samplingLayer),
                 description: 'Second tier: StatefulSet of collectors running the tail_sampling processor. Receives trace-routed spans and makes keep/drop decisions based on configured policies (errors, latency, probabilistic).',
@@ -835,8 +835,8 @@ function ProcessingSection({
             } : undefined}
             badge={hasPersistentQueue ? {
               label: 'WAL',
-              icon: <HardDrive size={10} className="text-sky-400" />,
-              colorClass: 'bg-sky-500/20 text-sky-400',
+              icon: <HardDrive size={10} className="text-red-400" />,
+              colorClass: 'bg-red-500/20 text-red-400',
             } : undefined}
             delay={nextDelay()}
           />
