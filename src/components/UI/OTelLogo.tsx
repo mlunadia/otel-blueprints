@@ -1,3 +1,45 @@
+// Official Kubernetes logo — mono-color with visible helm wheel
+export function KubernetesIcon({ size = 20, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 722 702"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Heptagonal shield */}
+      <path
+        fill="currentColor"
+        d="M361 0c-9.7 0-19.3 2.5-27.8 7.3L71.5 131.8c-17 9.6-29 26.3-32.8 45.5L.3 460.5c-3.8 19.2.5 39.1 11.8 54.5L152.8 680c11.3 15.4 29.3 24.5 48.5 24.5h299.4c19.2 0 37.2-9.1 48.5-24.5l140.7-165c11.3-15.4 15.6-35.3 11.8-54.5l-38.4-283.2c-3.8-19.2-15.8-35.9-32.8-45.5L369.8 7.3C365.6 4.9 361 0 361 0z"
+      />
+      {/* Helm wheel — white with opacity for contrast */}
+      <g transform="translate(361,351)">
+        {/* Outer ring */}
+        <circle cx="0" cy="0" r="165" fill="none" stroke="white" strokeWidth="24" opacity="0.9" />
+        {/* 7 spokes */}
+        <line x1="0" y1="0" x2="0" y2="-165" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="145" y2="-81" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="157" y2="63" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="89" y2="165" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="-89" y2="165" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="-157" y2="63" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        <line x1="0" y1="0" x2="-145" y2="-81" stroke="white" strokeWidth="24" strokeLinecap="round" opacity="0.9" />
+        {/* Center dot */}
+        <circle cx="0" cy="0" r="36" fill="white" opacity="0.9" />
+        {/* Spoke end dots */}
+        <circle cx="0" cy="-165" r="16" fill="white" opacity="0.9" />
+        <circle cx="145" cy="-81" r="16" fill="white" opacity="0.9" />
+        <circle cx="157" cy="63" r="16" fill="white" opacity="0.9" />
+        <circle cx="89" cy="165" r="16" fill="white" opacity="0.9" />
+        <circle cx="-89" cy="165" r="16" fill="white" opacity="0.9" />
+        <circle cx="-157" cy="63" r="16" fill="white" opacity="0.9" />
+        <circle cx="-145" cy="-81" r="16" fill="white" opacity="0.9" />
+      </g>
+    </svg>
+  );
+}
+
 // OpenTelemetry logo as a mono-color SVG component
 interface OTelLogoProps {
   size?: number;

@@ -8,11 +8,22 @@ import {
 } from './layers';
 
 export type DataLossPolicy = 'acceptable' | 'minimize' | 'zero';
+export type EnvironmentType = 'kubernetes' | 'host';
+export type VolumeTier = 'low' | 'medium' | 'high';
+
+export interface VolumeProfile {
+  tier: VolumeTier;
+  replicas: string;
+  placement: string;
+  loadBalancerType: string;
+}
 
 export interface Requirements {
+  // Environment
+  environmentType: EnvironmentType;
+
   // Scale
   dataVolume: number;           // 0-100
-  latencyTolerance: number;     // 0-100 (high = batch OK, low = real-time)
   
   // Application Collection
   needsAppLogs: boolean;
@@ -27,12 +38,11 @@ export interface Requirements {
   needsCentralPolicy: boolean;
   needsMultiBackend: boolean;
   needsTailSampling: boolean;
-  needsMultiRegion: boolean;
   
   // Resilience
   dataLossPolicy: DataLossPolicy;
   
-  // Environment constraints
+  // Environment constraints (Kubernetes-only)
   serverlessKubernetes: boolean;
   needsPerServiceIsolation: boolean;
 }
@@ -41,6 +51,9 @@ export interface ComposedArchitecture {
   edge: Layer[];
   processing: Layer[];
   buffering: Layer;
+  requirements: Requirements;
+  needsLoadBalancer: boolean;
+  volumeProfile: VolumeProfile;
   // Computed outputs
   diagram: { nodes: DiagramNode[]; edges: DiagramEdge[] };
   configSnippets: {
@@ -54,8 +67,8 @@ export interface ComposedArchitecture {
 }
 
 export const defaultRequirements: Requirements = {
-  dataVolume: 30,
-  latencyTolerance: 50,
+  environmentType: 'kubernetes',
+  dataVolume: 0,
   // Application collection - all on by default
   needsAppLogs: true,
   needsAppTraces: true,
@@ -67,7 +80,6 @@ export const defaultRequirements: Requirements = {
   needsCentralPolicy: false,
   needsMultiBackend: false,
   needsTailSampling: false,
-  needsMultiRegion: false,
   // Resilience
   dataLossPolicy: 'acceptable',
   // Constraints
@@ -83,6 +95,9 @@ export function composeArchitecture(requirements: Requirements): ComposedArchite
     edge: [],
     processing: [],
     buffering: getLayer('memory-queue')!,
+    requirements,
+    needsLoadBalancer: false,
+    volumeProfile: getVolumeProfile(requirements.dataVolume),
     diagram: { nodes: [], edges: [] },
     configSnippets: {},
     warnings: [],
@@ -100,7 +115,7 @@ export function composeArchitecture(requirements: Requirements): ComposedArchite
   determineBufferingLayer(requirements, arch);
 
   // Step 4: Add volume-based recommendations
-  addVolumeRecommendations(requirements, arch);
+  addVolumeRecommendations(arch);
 
   // Step 5: Calculate complexity
   arch.complexity = calculateComplexity(arch);
@@ -114,30 +129,66 @@ export function composeArchitecture(requirements: Requirements): ComposedArchite
   return arch;
 }
 
+function getVolumeProfile(dataVolume: number): VolumeProfile {
+  if (dataVolume >= 100) {
+    return {
+      tier: 'high',
+      replicas: '5-20+',
+      placement: 'Dedicated node pool or separate gateway cluster',
+      loadBalancerType: 'L7 load balancer (NGINX/Envoy)',
+    };
+  }
+  if (dataVolume >= 50) {
+    return {
+      tier: 'medium',
+      replicas: '3-5',
+      placement: 'Same cluster, dedicated node pool',
+      loadBalancerType: 'Standard K8s Service',
+    };
+  }
+  return {
+    tier: 'low',
+    replicas: '2',
+    placement: 'Same cluster as applications',
+    loadBalancerType: 'Standard K8s Service',
+  };
+}
+
 function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitecture): void {
-  // Check if infrastructure collection is needed (requires DaemonSet)
   const needsInfraCollection = requirements.needsInfraLogs || requirements.needsInfraMetrics;
-  
-  if (requirements.serverlessKubernetes) {
-    // DaemonSet not available on serverless K8s
+
+  if (requirements.environmentType === 'host') {
+    // Host / VM environment — standalone collector, no DaemonSet or Sidecar
+    if (needsInfraCollection) {
+      arch.edge.push(getLayer('host-agent')!);
+      arch.recommendations.push(
+        'Host agent runs as a systemd service collecting host metrics (hostmetrics receiver) ' +
+        'and local logs (filelog receiver). Applications export to localhost:4317.'
+      );
+    } else {
+      // No infra collection — still recommend a local agent for buffering
+      arch.edge.push(getLayer('host-agent')!);
+      arch.recommendations.push(
+        'A local host agent is recommended even without infrastructure collection — it provides ' +
+        'buffering, retry, and resource detection for application telemetry.'
+      );
+    }
+  } else if (requirements.serverlessKubernetes) {
+    // Serverless K8s — no DaemonSet
     if (needsInfraCollection) {
       arch.warnings.push(
         'Infrastructure collection (host metrics, disk logs) is unavailable on serverless Kubernetes. ' +
         'DaemonSet agents cannot run on Fargate/Cloud Run. Consider using cloud provider metrics instead.'
       );
     }
-    
+
     if (requirements.needsPerServiceIsolation) {
       arch.edge.push(getLayer('sidecar-agent')!);
     } else {
-      // Direct SDK export - will need gateway for any processing
       arch.edge.push(getLayer('direct-sdk')!);
-      arch.recommendations.push(
-        'On serverless K8s without sidecars, a Gateway is recommended for buffering and retry.'
-      );
     }
   } else {
-    // Standard Kubernetes - can use DaemonSet
+    // Standard Kubernetes — can use DaemonSet
     if (needsInfraCollection) {
       arch.edge.push(getLayer('daemonset-agent')!);
       if (requirements.needsInfraLogs && requirements.needsInfraMetrics) {
@@ -147,7 +198,7 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
         );
       }
     }
-    
+
     if (requirements.needsPerServiceIsolation) {
       arch.edge.push(getLayer('sidecar-agent')!);
       if (needsInfraCollection) {
@@ -157,7 +208,7 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
         );
       }
     }
-    
+
     // Default to direct SDK if no edge collector needed
     if (arch.edge.length === 0) {
       arch.edge.push(getLayer('direct-sdk')!);
@@ -169,14 +220,12 @@ function determineProcessingLayers(requirements: Requirements, arch: ComposedArc
   const needsGateway = 
     requirements.needsCentralPolicy ||
     requirements.needsMultiBackend ||
-    requirements.needsTailSampling ||
-    requirements.needsMultiRegion ||
     requirements.dataLossPolicy !== 'acceptable' ||
-    (requirements.serverlessKubernetes && arch.edge[0]?.id === 'direct-sdk') ||
-    requirements.dataVolume > 60; // High volume benefits from gateway pooling
+    requirements.dataVolume >= 50;
 
   if (needsGateway) {
     arch.processing.push(getLayer('gateway-pool')!);
+    arch.needsLoadBalancer = true;
   }
 
   if (requirements.needsTailSampling) {
@@ -192,13 +241,6 @@ function determineProcessingLayers(requirements: Requirements, arch: ComposedArc
         'tail sampling (traceID routing). Consider running spanmetrics on the agent tier before sampling.'
       );
     }
-  }
-
-  if (requirements.needsMultiRegion) {
-    arch.processing.push(getLayer('regional-federation')!);
-    arch.recommendations.push(
-      'Regional gateways should apply initial filtering/sampling to reduce cross-region traffic costs.'
-    );
   }
 
   // If no processing needed, explicitly set to none
@@ -231,50 +273,72 @@ function determineBufferingLayer(requirements: Requirements, arch: ComposedArchi
   // Default is memory-queue, already set
 }
 
-function addVolumeRecommendations(requirements: Requirements, arch: ComposedArchitecture): void {
-  if (requirements.dataVolume > 80) {
-    arch.recommendations.push(
-      'Very high volume (>100K spans/sec): Consider head sampling at the SDK or agent tier ' +
-      'to reduce load before gateway processing.'
-    );
-  }
-  
-  if (requirements.dataVolume > 60 && arch.processing.some(p => p.id === 'gateway-pool')) {
-    arch.recommendations.push(
-      'High volume: Gateway HPA should target 50-60% CPU utilization. ' +
-      'Scale-down stabilization should be 300-600 seconds to avoid thrashing.'
-    );
-  }
+function addVolumeRecommendations(arch: ComposedArchitecture): void {
+  const hasGateway = arch.processing.some(p => p.id === 'gateway-pool');
+  if (!hasGateway) return;
 
-  if (requirements.latencyTolerance < 30) {
+  const { tier } = arch.volumeProfile;
+
+  if (tier === 'low') {
     arch.recommendations.push(
-      'Real-time latency requirements: Minimize processing layers. ' +
-      'Consider head sampling over tail sampling to reduce decision_wait delays.'
+      '2 gateway replicas co-located with application workloads. ' +
+      'Standard Kubernetes Service provides load balancing.'
+    );
+  } else if (tier === 'medium') {
+    arch.recommendations.push(
+      '3-5 gateway replicas on a dedicated node pool. ' +
+      'Use node affinity and taints to isolate collector workloads from application pods.'
+    );
+  } else {
+    arch.recommendations.push(
+      '5-20+ gateway replicas on a dedicated node pool or separate gateway cluster. ' +
+      'Use an L7 load balancer (NGINX, Envoy) for advanced traffic management and backpressure handling. ' +
+      'Consider head sampling at the SDK or agent tier to reduce load before gateway processing.'
     );
   }
 }
 
 function calculateComplexity(arch: ComposedArchitecture): 'Low' | 'Medium' | 'High' | 'Very High' {
-  let score = 0;
-  
-  // Edge complexity
-  if (arch.edge.length > 1) score += 1; // Multiple edge collectors
-  if (arch.edge.some(e => e.id === 'daemonset-agent')) score += 1;
-  if (arch.edge.some(e => e.id === 'sidecar-agent')) score += 1;
-  
-  // Processing complexity
-  if (arch.processing.some(p => p.id === 'gateway-pool')) score += 1;
-  if (arch.processing.some(p => p.id === 'sampling-tier')) score += 2;
-  if (arch.processing.some(p => p.id === 'regional-federation')) score += 2;
-  
-  // Buffering complexity
-  if (arch.buffering.id === 'persistent-queue') score += 1;
-  if (arch.buffering.id === 'kafka-buffer') score += 2;
-  
-  if (score <= 1) return 'Low';
-  if (score <= 3) return 'Medium';
-  if (score <= 5) return 'High';
-  return 'Very High';
+  const hasGateway = arch.processing.some(p => p.id === 'gateway-pool');
+  const hasSampling = arch.processing.some(p => p.id === 'sampling-tier');
+  const hasKafka = arch.buffering.id === 'kafka-buffer';
+  const hasPersistentQueue = arch.buffering.id === 'persistent-queue';
+  const hasDaemonSet = arch.edge.some(e => e.id === 'daemonset-agent');
+  const hasSidecar = arch.edge.some(e => e.id === 'sidecar-agent');
+  const multipleEdge = arch.edge.length > 1;
+  const volumeTier = arch.volumeProfile.tier;
+
+  // Kafka or tail sampling are always High+ — dedicated infrastructure to operate
+  if (hasKafka || hasSampling) {
+    // Kafka + sampling together, or either combined with high volume = Very High
+    if ((hasKafka && hasSampling) || (hasKafka && volumeTier === 'high') || (hasSampling && volumeTier === 'high')) {
+      return 'Very High';
+    }
+    return 'High';
+  }
+
+  // High-volume gateway (dedicated node pool/cluster, L7 LB) = High
+  if (hasGateway && volumeTier === 'high') {
+    return 'High';
+  }
+
+  // Medium-volume gateway (dedicated node pool) or gateway + WAL = Medium
+  if (hasGateway) {
+    if (volumeTier === 'medium' || hasPersistentQueue || multipleEdge) {
+      return 'Medium';
+    }
+    // Low-volume gateway with simple edge = Low-Medium boundary
+    if (hasDaemonSet || hasSidecar) {
+      return 'Medium';
+    }
+    return 'Low';
+  }
+
+  // No gateway — edge-only architectures
+  if (multipleEdge || hasSidecar) return 'Medium';
+  if (hasDaemonSet) return 'Low';
+
+  return 'Low';
 }
 
 /**

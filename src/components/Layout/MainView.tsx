@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Lightbulb, HelpCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Lightbulb, Search, Server } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useAppContext, Requirements } from '../../context/AppContext';
+import { EnvironmentType } from '../../data/composer';
 import { scaleLevers, resilienceLever, capabilityLevers, constraintLevers, getCapabilitiesByCategory, ThreePositionLever, getPositionIndex, getValueFromIndex } from '../../data/decisionLevers';
 import { ComposedArchitectureView } from '../Composer/ComposedArchitectureView';
-import { CollectorIcon } from '../UI/OTelLogo';
+import { CollectorIcon, KubernetesIcon } from '../UI/OTelLogo';
 
 export function MainView() {
   const {
@@ -33,16 +34,15 @@ export function MainView() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-3"
               >
-                What does your telemetry pipeline need?
+                Generate an OpenTelemetry Reference Architecture
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-[var(--text-secondary)] max-w-2xl mx-auto"
+                className="text-[var(--text-secondary)]"
               >
-                Select your requirements below. We'll compose an architecture from compatible layers
-                that work together to meet your needs.
+                Select your requirements to create an architecture that can generate an OTel blueprints composed diagram
               </motion.p>
             </div>
 
@@ -56,12 +56,46 @@ export function MainView() {
               <Lightbulb className="text-[var(--otel-blue)] flex-shrink-0 mt-0.5" size={20} />
               <div>
                 <p className="text-sm text-[var(--text-primary)]">
-                  <strong>Composable architecture:</strong> Unlike picking a single pattern, 
-                  you can combine layers. Need both host metrics AND per-service isolation? 
-                  Use DaemonSet + Sidecar together. Each selection adds to your pipeline.
+                  OpenTelemetry Blueprints are starting points, not turnkey deployments. Each blueprint 
+                  is intended to be adapted to an organisation's requirements around scale, security, 
+                  networking, compliance, and operational processes.
                 </p>
               </div>
             </motion.div>
+
+            {/* Environment Type */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                Edge Environment
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Where are your workloads running?
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <EnvironmentOption
+                  type="kubernetes"
+                  label="Kubernetes"
+                  description="Containers orchestrated by Kubernetes — agents deploy as DaemonSets or Sidecars"
+                  icon={<KubernetesIcon size={24} />}
+                  selected={requirements.environmentType === 'kubernetes'}
+                  onSelect={() => {
+                    setRequirement('environmentType', 'kubernetes' as EnvironmentType);
+                  }}
+                />
+                <EnvironmentOption
+                  type="host"
+                  label="Host / VM"
+                  description="Bare-metal servers or virtual machines — agent runs as a standalone service"
+                  icon={<Server size={24} />}
+                  selected={requirements.environmentType === 'host'}
+                  onSelect={() => {
+                    setRequirement('environmentType', 'host' as EnvironmentType);
+                    setRequirement('serverlessKubernetes', false as never);
+                    setRequirement('needsPerServiceIsolation', false as never);
+                  }}
+                />
+              </div>
+            </div>
 
             {/* Collection Capabilities */}
             <div className="mb-8">
@@ -98,7 +132,10 @@ export function MainView() {
                 >
                   <CollectionBox
                     title="Infrastructure"
-                    description="Telemetry collected from nodes via DaemonSet agent"
+                    description={requirements.environmentType === 'host'
+                      ? 'Telemetry collected from the host (CPU, memory, disk, logs)'
+                      : 'Telemetry collected from Kubernetes nodes via DaemonSet agent'
+                    }
                     icon="Server"
                     color="green"
                     signals={getCapabilitiesByCategory('infra-collection')}
@@ -197,38 +234,39 @@ export function MainView() {
               </div>
             </div>
 
-            {/* Environment Constraints */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-                Environment Constraints
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)] mb-4">
-                Any infrastructure limitations?
-              </p>
-              <div className="grid gap-3 md:grid-cols-2">
-                {constraintLevers.map((lever, idx) => (
-                  <motion.div
-                    key={lever.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + 0.05 * idx }}
-                  >
-                    <ConstraintToggle
-                      lever={lever}
-                      value={requirements[lever.id as keyof Requirements] as boolean}
-                      onChange={(value) => {
-                        setRequirement(lever.id as keyof Requirements, value as never);
-                        // If enabling serverless, disable infrastructure collection
-                        if (lever.id === 'serverlessKubernetes' && value) {
-                          setRequirement('needsInfraLogs', false as never);
-                          setRequirement('needsInfraMetrics', false as never);
-                        }
-                      }}
-                    />
-                  </motion.div>
-                ))}
+            {/* Environment Constraints — only for Kubernetes */}
+            {requirements.environmentType === 'kubernetes' && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                  Kubernetes Constraints
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
+                  Any infrastructure limitations?
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {constraintLevers.map((lever, idx) => (
+                    <motion.div
+                      key={lever.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 + 0.05 * idx }}
+                    >
+                      <ConstraintToggle
+                        lever={lever}
+                        value={requirements[lever.id as keyof Requirements] as boolean}
+                        onChange={(value) => {
+                          setRequirement(lever.id as keyof Requirements, value as never);
+                          if (lever.id === 'serverlessKubernetes' && value) {
+                            setRequirement('needsInfraLogs', false as never);
+                            setRequirement('needsInfraMetrics', false as never);
+                          }
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Build button */}
             <motion.div
@@ -248,8 +286,8 @@ export function MainView() {
                 onClick={() => setCurrentPage('how-it-works')}
                 className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
               >
-                <HelpCircle size={18} />
-                <span>How does composition work?</span>
+                <Search size={18} />
+                <span>Explore OpenTelemetry Blueprints</span>
               </button>
             </motion.div>
           </motion.div>
@@ -429,17 +467,18 @@ function CapabilityToggle({ lever, value, onChange, disabled, disabledReason }: 
             </div>
           </div>
           <p className="text-sm text-[var(--text-secondary)] mt-1">{lever.description}</p>
-          {/* Fixed height impact area - always reserve space */}
-          <div className="mt-2 min-h-[2.5rem]">
-            {value && !disabled && (
-              <p className="text-xs text-[var(--otel-light-blue)]">
-                {lever.impact}
-              </p>
-            )}
-            {disabled && disabledReason && (
-              <p className="text-xs text-yellow-400">{disabledReason}</p>
-            )}
-          </div>
+          {value && !disabled && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="text-xs text-[var(--otel-light-blue)] mt-2"
+            >
+              {lever.impact}
+            </motion.p>
+          )}
+          {disabled && disabledReason && (
+            <p className="text-xs text-yellow-400 mt-2">{disabledReason}</p>
+          )}
         </div>
       </div>
     </button>
@@ -578,7 +617,7 @@ function ConstraintToggle({ lever, value, onChange }: ConstraintToggleProps) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`w-full text-left p-4 rounded-lg border transition-all ${
+      className={`w-full h-full text-left p-4 rounded-lg border transition-all ${
         value
           ? 'bg-yellow-500/10 border-yellow-500'
           : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-yellow-500/50'
@@ -617,5 +656,61 @@ function ConstraintToggle({ lever, value, onChange }: ConstraintToggleProps) {
         </div>
       </div>
     </button>
+  );
+}
+
+// Environment Option Component
+interface EnvironmentOptionProps {
+  type: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  selected: boolean;
+  onSelect: () => void;
+}
+
+function EnvironmentOption({ label, description, icon, selected, onSelect }: EnvironmentOptionProps) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      onClick={onSelect}
+      className={`w-full h-full text-left p-5 rounded-xl border-2 transition-all ${
+        selected
+          ? 'bg-[var(--otel-blue)]/10 border-[var(--otel-blue)] shadow-lg shadow-[var(--otel-blue)]/10'
+          : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-[var(--otel-blue)]/50'
+      }`}
+    >
+      <div className="flex items-center gap-4 h-full">
+        <div className={`p-3 rounded-lg ${
+          selected
+            ? 'bg-[var(--otel-blue)]/20 text-[var(--otel-blue)]'
+            : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)]'
+        }`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <h4 className={`font-semibold text-base ${
+            selected ? 'text-[var(--otel-blue)]' : 'text-[var(--text-primary)]'
+          }`}>
+            {label}
+          </h4>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">{description}</p>
+        </div>
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+          selected
+            ? 'border-[var(--otel-blue)] bg-[var(--otel-blue)]'
+            : 'border-[var(--border-color)]'
+        }`}>
+          {selected && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-2 h-2 rounded-full bg-white"
+            />
+          )}
+        </div>
+      </div>
+    </motion.button>
   );
 }

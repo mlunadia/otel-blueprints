@@ -24,17 +24,6 @@ export const scaleLevers: ThreePositionLever[] = [
       { value: 100, label: 'High', description: '>50K events/sec' },
     ],
   },
-  {
-    id: 'latencyTolerance',
-    name: 'Latency Tolerance',
-    description: 'How quickly must data reach the backend?',
-    icon: 'Clock',
-    positions: [
-      { value: 0, label: 'Real-time', description: 'Sub-second delivery' },
-      { value: 50, label: 'Near real-time', description: 'Seconds delay OK' },
-      { value: 100, label: 'Batch OK', description: 'Minutes delay OK' },
-    ],
-  },
 ];
 
 // Resilience lever - now a 3-position slider
@@ -135,15 +124,6 @@ export const capabilityLevers: CapabilityLever[] = [
     description: 'Send telemetry to more than one destination',
     impact: 'Adds Gateway for centralized routing to multiple exporters',
     icon: 'Share2',
-    category: 'routing',
-    isCollector: true,
-  },
-  {
-    id: 'needsMultiRegion',
-    name: 'Multi-Region',
-    description: 'Deploy across multiple regions with data sovereignty requirements',
-    impact: 'Adds Regional Federation - regional gateways forward to global gateway',
-    icon: 'Globe',
     category: 'routing',
     isCollector: true,
   },

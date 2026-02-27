@@ -311,6 +311,111 @@ spec:
       memory: '64Mi-128Mi',
     },
   },
+  {
+    id: 'host-agent',
+    type: 'edge',
+    name: 'Host Agent',
+    description: 'Standalone collector running on a bare-metal host or VM. Collects host metrics and local application telemetry.',
+    icon: 'Server',
+    requires: [],
+    provides: ['host-metrics', 'resource-detection', 'log-collection'],
+    incompatibleWith: [],
+    diagramNodes: [
+      { id: 'app', type: 'app', label: 'Application' },
+      { id: 'host-agent', type: 'agent', label: 'Host\nAgent' },
+    ],
+    diagramEdges: [
+      { from: 'app', to: 'host-agent', label: 'localhost' },
+    ],
+    configSnippets: {
+      agent: `# Host Agent Configuration (systemd / standalone)
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      network:
+      filesystem:
+      load:
+  filelog:
+    include: [/var/log/syslog, /var/log/*.log]
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>\\S+) (?P<host>\\S+) (?P<ident>\\S+): (?P<message>.*)$'
+        timestamp:
+          parse_from: attributes.time
+          layout_type: gotime
+          layout: '2006-01-02T15:04:05.000Z'
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+  resourcedetection:
+    detectors: [env, system, gcp, aws, azure]
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
+
+exporters:
+  otlp:
+    endpoint: otel-gateway:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp]`,
+      kubernetes: `# Install via package manager or download binary
+# Debian/Ubuntu:
+#   sudo apt-get install otelcol-contrib
+#
+# Or download from GitHub releases:
+#   https://github.com/open-telemetry/opentelemetry-collector-releases
+#
+# systemd service file:
+# /etc/systemd/system/otelcol.service
+[Unit]
+Description=OpenTelemetry Collector
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/otelcol-contrib --config /etc/otelcol/config.yaml
+Restart=always
+RestartSec=5
+User=otelcol
+Group=otelcol
+Environment=GOMEMLIMIT=400MiB
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target`,
+    },
+    resources: {
+      cpu: '250m-500m',
+      memory: '256Mi-512Mi',
+    },
+  },
 ];
 
 // ============================================================================
@@ -335,7 +440,7 @@ export const processingLayers: Layer[] = [
     id: 'gateway-pool',
     type: 'processing',
     name: 'Gateway Pool',
-    description: 'Centralized collector deployment (3+ replicas) for policy enforcement, multi-backend routing, and credential isolation.',
+    description: 'Centralized collector deployment for policy enforcement, multi-backend routing, and credential isolation. Replica count scales with data volume.',
     icon: 'Layers',
     requires: [],
     provides: ['central-policy', 'multi-backend', 'credential-isolation', 'pii-filtering'],
@@ -493,7 +598,6 @@ spec:
     resources: {
       cpu: '1-2 cores',
       memory: '2Gi-4Gi',
-      replicas: 3,
     },
   },
   {
@@ -624,136 +728,6 @@ spec:
             requests:
               memory: 4Gi
               cpu: 2000m
-            limits:
-              memory: 8Gi
-              cpu: 4000m`,
-    },
-    resources: {
-      cpu: '2-4 cores',
-      memory: '4Gi-8Gi',
-      replicas: 3,
-    },
-  },
-  {
-    id: 'regional-federation',
-    type: 'processing',
-    name: 'Regional Federation',
-    description: 'Regional gateways process locally before forwarding to global gateway. For multi-region and data sovereignty.',
-    icon: 'Globe',
-    requires: ['gateway-pool'],
-    provides: ['multi-region', 'data-sovereignty', 'cross-region-optimization'],
-    incompatibleWith: [],
-    diagramNodes: [
-      { id: 'regional', type: 'gateway', label: 'Regional\nGateway' },
-      { id: 'global', type: 'gateway', label: 'Global\nGateway' },
-    ],
-    diagramEdges: [
-      { from: 'regional', to: 'global', label: 'cross-region' },
-    ],
-    configSnippets: {
-      gateway: `# Regional Gateway Configuration
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: 0.0.0.0:4317
-
-processors:
-  memory_limiter:
-    check_interval: 1s
-    limit_mib: 2048
-  resource:
-    attributes:
-      - key: deployment.region
-        value: \${REGION}
-        action: upsert
-  # Regional sampling to reduce cross-region traffic
-  probabilistic_sampler:
-    sampling_percentage: 50
-  batch:
-    send_batch_size: 2048
-    timeout: 10s
-
-exporters:
-  otlp/global:
-    endpoint: otel-global-gateway.central-region.example.com:4317
-    headers:
-      Authorization: Bearer \${GLOBAL_GATEWAY_TOKEN}
-    compression: zstd
-
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, resource, probabilistic_sampler, batch]
-      exporters: [otlp/global]
----
-# Global Gateway Configuration
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: 0.0.0.0:4317
-
-processors:
-  memory_limiter:
-    check_interval: 1s
-    limit_mib: 4096
-  batch:
-    send_batch_size: 4096
-    timeout: 15s
-
-exporters:
-  otlp/backend:
-    endpoint: backend.example.com:4317
-
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [otlp/backend]`,
-      kubernetes: `# Regional Gateway (deploy per region)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: otel-regional-gateway
-  namespace: observability
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: otel-regional-gateway
-  template:
-    spec:
-      containers:
-        - name: collector
-          image: otel/opentelemetry-collector-contrib:latest
-          env:
-            - name: REGION
-              value: "us-west-2"
-          resources:
-            limits:
-              memory: 4Gi
-              cpu: 2000m
----
-# Global Gateway (deploy in central region)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: otel-global-gateway
-  namespace: observability
-spec:
-  replicas: 5
-  selector:
-    matchLabels:
-      app: otel-global-gateway
-  template:
-    spec:
-      containers:
-        - name: collector
-          image: otel/opentelemetry-collector-contrib:latest
-          resources:
             limits:
               memory: 8Gi
               cpu: 4000m`,

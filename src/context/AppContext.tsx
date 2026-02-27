@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Requirements, DataLossPolicy, defaultRequirements, ComposedArchitecture, composeArchitecture } from '../data/composer';
+import { Requirements, DataLossPolicy, EnvironmentType, defaultRequirements, ComposedArchitecture, composeArchitecture } from '../data/composer';
 
 export type Theme = 'dark' | 'light';
 
 // Re-export types from composer for convenience
-export type { Requirements, DataLossPolicy, ComposedArchitecture };
+export type { Requirements, DataLossPolicy, EnvironmentType, ComposedArchitecture };
 export { defaultRequirements };
 
 export type Page = 'home' | 'explore' | 'how-it-works';

@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, Lightbulb, CheckCircle, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { ComposedArchitecture, getArchitectureCapabilities } from '../../data/composer';
-import { PipelineDiagram } from './PipelineDiagram';
+import { VisualPipelineDiagram } from './VisualPipelineDiagram';
 import { LayerCard } from './LayerCard';
 
 interface ComposedArchitectureViewProps {
@@ -59,7 +59,7 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
         transition={{ delay: 0.1 }}
         className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-6"
       >
-        <PipelineDiagram architecture={architecture} />
+        <VisualPipelineDiagram architecture={architecture} />
       </motion.div>
 
       {/* Warnings */}

@@ -29,7 +29,7 @@ export function Header() {
         >
           <OTelLogo size={40} />
           <div className="text-left">
-            <h1 className="font-bold text-lg text-[var(--text-primary)]">OTel Architecture Advisor</h1>
+            <h1 className="font-bold text-lg text-[var(--text-primary)]">OpenTelemetry Blueprints</h1>
             <p className="text-xs text-[var(--text-secondary)]">Find the right OpenTelemetry pattern for your needs</p>
           </div>
         </button>
