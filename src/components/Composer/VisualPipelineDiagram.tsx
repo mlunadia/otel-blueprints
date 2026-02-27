@@ -813,7 +813,7 @@ function ProcessingSection({
       )}
       {hasGateway && (() => {
         const vp = architecture.volumeProfile;
-        const baseMeta = gatewayLayer ? getLayerTooltip(gatewayLayer).meta : [];
+        const baseMeta = gatewayLayer ? getLayerTooltip(gatewayLayer).meta ?? [] : [];
         const volumeMeta = [
           ...baseMeta,
           { label: 'Replicas', value: vp.replicas },
