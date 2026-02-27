@@ -277,14 +277,14 @@ export function MainView() {
             >
               <button
                 onClick={() => setShowResults(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-[var(--otel-blue)] hover:bg-[var(--otel-dark-blue)] text-white font-semibold rounded-lg transition-colors text-lg"
+                className="flex items-center gap-2 px-8 py-4 bg-[#425cc7] hover:bg-[#3549a8] text-white font-semibold rounded-lg transition-colors text-lg"
               >
                 Build My Architecture
                 <Play size={20} />
               </button>
               <button
                 onClick={() => setCurrentPage('how-it-works')}
-                className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
+                className="flex items-center gap-2 text-[#f5a800] hover:text-[#d99200] transition-colors"
               >
                 <DraftingCompass size={18} />
                 <span>Explore OpenTelemetry Blueprints</span>
