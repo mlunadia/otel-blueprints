@@ -137,41 +137,40 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
         </div>
       </motion.div>
 
-      {/* Warnings */}
-      {architecture.warnings.length > 0 && (
+      {/* Recommendations (includes warnings and notes) */}
+      {(architecture.recommendations.length > 0 || architecture.warnings.length > 0 || architecture.buffering.id === 'memory-queue') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="space-y-2"
         >
+          <h3 className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
+            <Lightbulb size={16} />
+            Recommendations
+          </h3>
           {architecture.warnings.map((warning, idx) => (
             <div
-              key={idx}
+              key={`w-${idx}`}
               className="flex items-start gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30"
             >
               <AlertTriangle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
               <p className="text-sm text-[var(--text-primary)]">{warning}</p>
             </div>
           ))}
-        </motion.div>
-      )}
-
-      {/* Recommendations */}
-      {architecture.recommendations.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-2"
-        >
-          <h3 className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
-            <Lightbulb size={16} />
-            Recommendations
-          </h3>
+          {architecture.buffering.id === 'memory-queue' && (
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+              <AlertTriangle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
+              <p className="text-sm text-[var(--text-primary)]">
+                <strong>Buffering:</strong> Using default in-memory queues with retry.
+                Data may be lost on collector crash. Select "Minimize Data Loss" or "Zero Data Loss"
+                in resilience options for persistent buffering.
+              </p>
+            </div>
+          )}
           {architecture.recommendations.map((rec, idx) => (
             <div
-              key={idx}
+              key={`r-${idx}`}
               className="flex items-start gap-3 p-4 rounded-lg bg-[var(--otel-blue)]/10 border border-[var(--otel-blue)]/30"
             >
               <CheckCircle className="text-[var(--otel-blue)] flex-shrink-0 mt-0.5" size={18} />
@@ -268,14 +267,6 @@ export function ComposedArchitectureView({ architecture }: ComposedArchitectureV
           </div>
         )}
 
-        {/* Default buffering note */}
-        {architecture.buffering.id === 'memory-queue' && (
-          <div className="text-sm text-[var(--text-secondary)] p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
-            <strong>Buffering:</strong> Using default in-memory queues with retry. 
-            Data may be lost on collector crash. Select "Minimize Data Loss" or "Zero Data Loss" 
-            in resilience options for persistent buffering.
-          </div>
-        )}
       </motion.div>
     </div>
   );
