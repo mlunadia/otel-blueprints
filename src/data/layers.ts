@@ -629,7 +629,11 @@ exporters:
       dns:
         hostname: otel-sampling.observability.svc.cluster.local
         port: 4317`,
-      gateway: `# Sampling Tier Configuration
+      gateway: `# Sampling Tier Configuration — Two-step trace pipeline
+# Step 1: Derive spanmetrics from 100% of traces BEFORE sampling
+# Step 2: Apply tail sampling, then export only sampled traces
+# The forward connector bridges the two pipeline stages.
+
 receivers:
   otlp:
     protocols:
@@ -669,22 +673,30 @@ connectors:
       - name: http.status_code
     exemplars:
       enabled: true
+  forward: {}
 
 exporters:
-  otlp/traces:
-    endpoint: backend.example.com:4317
-  prometheusremotewrite:
-    endpoint: https://prometheus.example.com/api/v1/write
+  otlp/backend:
+    endpoint: \${BACKEND_ENDPOINT}
+    headers:
+      Authorization: Bearer \${BACKEND_TOKEN}
 
 service:
   pipelines:
-    traces:
+    # Step 1: derive spanmetrics from all traces, then forward to step 2
+    traces/1-pre-sampling:
       receivers: [otlp]
-      processors: [memory_limiter, tail_sampling]
-      exporters: [spanmetrics, otlp/traces]
-    metrics:
+      processors: [memory_limiter]
+      exporters: [spanmetrics, forward]
+    # Step 2: apply tail sampling on forwarded traces
+    traces/2-sampling:
+      receivers: [forward]
+      processors: [tail_sampling]
+      exporters: [otlp/backend]
+    # Spanmetrics-derived RED metrics exported via OTLP
+    metrics/spanmetrics:
       receivers: [spanmetrics]
-      exporters: [prometheusremotewrite]`,
+      exporters: [otlp/backend]`,
       kubernetes: `# StatefulSet for Sampling Tier
 apiVersion: v1
 kind: Service

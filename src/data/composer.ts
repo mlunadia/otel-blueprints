@@ -257,12 +257,11 @@ function determineProcessingLayers(requirements: Requirements, arch: ComposedArc
       'All spans of a trace must reach the same sampling collector.'
     );
     
-    if (requirements.needsMultiBackend) {
-      arch.warnings.push(
-        'Note: spanmetrics connector requires routing_key: service, which is incompatible with ' +
-        'tail sampling (traceID routing). Consider running spanmetrics on the agent tier before sampling.'
-      );
-    }
+    arch.recommendations.push(
+      'The sampling tier uses a two-step trace pipeline: step 1 derives spanmetrics from 100% of traces ' +
+      'via the spanmetrics connector, then the forward connector passes them to step 2 where tail sampling ' +
+      'is applied. This ensures accurate RED metrics regardless of sampling decisions.'
+    );
   }
 
   // If no processing needed, explicitly set to none

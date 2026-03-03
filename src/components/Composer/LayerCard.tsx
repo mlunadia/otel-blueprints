@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Server, Box, Layers, Database, HardDrive, Zap, Globe, GitBranch, MinusCircle, Cpu } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check, Server, Box, Layers, Database, HardDrive, Zap, Globe, GitBranch, MinusCircle, Cpu, Flag } from 'lucide-react';
 import { Layer, LayerType } from '../../data/layers';
 
 interface LayerCardProps {
@@ -176,9 +176,27 @@ export function LayerCard({ layer, layerType, index = 0 }: LayerCardProps) {
             {/* Config snippets */}
             {hasConfigs && (
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-[var(--text-primary)]">
-                  Configuration
-                </h5>
+                <div className="flex items-center justify-between">
+                  <h5 className="text-sm font-medium text-[var(--text-primary)]">
+                    Reference Configurations
+                  </h5>
+                  <button
+                    onClick={() => {
+                      const title = encodeURIComponent(`Config issue: ${layer.name}`);
+                      const body = encodeURIComponent(
+                        `## Configuration Issue\n\n**Layer:** ${layer.name}\n**Type:** ${layer.type}\n\n### What's wrong\n<!-- Describe the configuration error or improvement -->\n\n`
+                      );
+                      window.open(
+                        `https://github.com/mlunadia/otel-blueprints/issues/new?title=${title}&body=${body}&labels=bug`,
+                        '_blank'
+                      );
+                    }}
+                    className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--otel-blue)] transition-colors"
+                  >
+                    <Flag size={12} />
+                    <span>Report issue</span>
+                  </button>
+                </div>
                 
                 {layer.configSnippets.agent && (
                   <ConfigSnippet
