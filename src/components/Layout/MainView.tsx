@@ -626,7 +626,7 @@ function CollectionBox({
               </button>
               {isSuperseded && (
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[10px] text-[var(--text-secondary)] leading-relaxed shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">
-                  Recommended: collect logs via stdout → disk → filelog receiver. Disable Node Log Collection to use SDK OTLP instead.
+                  Recommended: collect logs via stdout → disk → filelog receiver. Disable Disk Log Collection to use SDK OTLP instead.
                 </div>
               )}
             </div>

@@ -56,7 +56,7 @@ export const capabilityLevers: CapabilityLever[] = [
     id: 'needsAppLogs',
     name: 'Logs (OTLP)',
     description: 'Applications emit logs directly via the OpenTelemetry SDK',
-    impact: 'Most apps write to stdout — enable Node Log Collection below to collect from disk via filelog receiver',
+    impact: 'Most apps write to stdout — enable Disk Log Collection below to collect from disk via filelog receiver',
     icon: 'FileText',
     category: 'app-collection',
     isCollector: false,
@@ -82,7 +82,7 @@ export const capabilityLevers: CapabilityLever[] = [
   // Infrastructure Collection capabilities
   {
     id: 'needsInfraLogs',
-    name: 'Node Log Collection',
+    name: 'Disk Log Collection',
     description: 'Collect stdout/container logs and system logs from disk via filelog receiver',
     impact: 'DaemonSet agent tails log files from each node — the recommended way to collect application logs in production',
     icon: 'HardDrive',
@@ -91,7 +91,7 @@ export const capabilityLevers: CapabilityLever[] = [
   },
   {
     id: 'needsInfraMetrics',
-    name: 'Node Metrics',
+    name: 'Host Metrics',
     description: 'Collect CPU, memory, disk, and network metrics from nodes',
     impact: 'DaemonSet agent with hostmetrics receiver (not available on managed containers)',
     icon: 'Cpu',
