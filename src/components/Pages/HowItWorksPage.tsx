@@ -1,13 +1,16 @@
-import { motion } from 'framer-motion';
-import { useMemo } from 'react';
-import { ArrowLeft, Layers, GitBranch, Server, Database, Network, Puzzle, Zap, Box, Monitor, HardDrive } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo, useState, useEffect } from 'react';
+import { ArrowLeft, Layers, GitBranch, Server, Database, Network, Puzzle, Zap, Box, Monitor, HardDrive, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { CollectorIcon } from '../UI/OTelLogo';
 import { composeArchitecture, defaultRequirements } from '../../data/composer';
 import { VisualPipelineDiagram } from '../Composer/VisualPipelineDiagram';
+import { getLayer, Layer } from '../../data/layers';
+import { LayerCard } from '../Composer/LayerCard';
 
 export function HowItWorksPage() {
   const { setCurrentPage } = useAppContext();
+  const [selectedLayer, setSelectedLayer] = useState<Layer | null>(null);
 
   const twoTierArchitecture = useMemo(() => composeArchitecture({
     ...defaultRequirements,
@@ -15,8 +18,56 @@ export function HowItWorksPage() {
     dataLossPolicy: 'minimize',
   }), []);
 
+  useEffect(() => {
+    if (selectedLayer) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedLayer]);
+
+  const handleOpenDetail = (layerId: string) => {
+    const layer = getLayer(layerId);
+    if (layer) setSelectedLayer(layer);
+  };
+
   return (
     <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
+      {/* Layer Detail Modal */}
+      <AnimatePresence>
+        {selectedLayer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSelectedLayer(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)]">
+                <h3 className="font-semibold text-[var(--text-primary)]">{selectedLayer.name}</h3>
+                <button
+                  onClick={() => setSelectedLayer(null)}
+                  className="p-1 rounded-md hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-4">
+                <LayerCard layer={selectedLayer} layerType={selectedLayer.type} />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -139,6 +190,7 @@ export function HowItWorksPage() {
                 borderClass="border-green-500/40"
                 bgClass="bg-green-500/5"
                 description="One collector per Kubernetes node. Collects host metrics, container logs, and enriches with k8s metadata."
+                onOpenDetail={() => handleOpenDetail('daemonset-agent')}
                 detail={
                   <>Deployed as a <code className="text-green-300">DaemonSet</code>. Runs <code className="text-green-300">hostmetrics</code>, <code className="text-green-300">filelog</code>, and <code className="text-green-300">k8sattributes</code> receivers.
                   Applications on the same node export to <code className="text-green-300">localhost:4317</code>.</>
@@ -170,6 +222,7 @@ export function HowItWorksPage() {
                 borderClass="border-green-500/40"
                 bgClass="bg-green-500/5"
                 description="One collector per pod. Provides per-service isolation and custom config. Works on managed container platforms (ECS/Fargate, Azure Container Apps)."
+                onOpenDetail={() => handleOpenDetail('sidecar-agent')}
                 detail={
                   <>Injected via the <code className="text-green-300">OpenTelemetry Operator</code> sidecar mode.
                   Each pod gets its own lightweight collector with custom pipelines. Can coexist with DaemonSet agents.</>
@@ -201,6 +254,7 @@ export function HowItWorksPage() {
                 borderClass="border-green-500/40"
                 bgClass="bg-green-500/5"
                 description="Standalone collector running as a systemd service. Collects host metrics, disk logs, and receives application telemetry."
+                onOpenDetail={() => handleOpenDetail('host-agent')}
                 detail={
                   <>Runs <code className="text-green-300">hostmetrics</code> and <code className="text-green-300">filelog</code> receivers.
                   Applications export to <code className="text-green-300">localhost:4317</code>. Provides buffering, retry, and resource detection even without infrastructure collection.</>
@@ -232,6 +286,7 @@ export function HowItWorksPage() {
                 borderClass="border-orange-500/40"
                 bgClass="bg-orange-500/5"
                 description="Centralized collector deployment (3+ replicas) for policy enforcement, PII redaction, multi-backend routing, and credential isolation."
+                onOpenDetail={() => handleOpenDetail('gateway-pool')}
                 detail={
                   <>Deployed as a <code className="text-orange-300">Deployment</code> with HPA. Runs <code className="text-orange-300">filter</code>, <code className="text-orange-300">transform</code>, and <code className="text-orange-300">batch</code> processors.
                   Isolates backend credentials from edge collectors.</>
@@ -254,6 +309,7 @@ export function HowItWorksPage() {
                 borderClass="border-orange-500/40"
                 bgClass="bg-orange-500/5"
                 description="High telemetry volume requires a load balancer in front of the Gateway Pool to distribute traffic across replicas."
+                onOpenDetail={() => handleOpenDetail('gateway-pool')}
                 detail={
                   <>The load balancer can be NGINX, a Kubernetes Service, or the OTel <code className="text-orange-300">loadbalancing</code> exporter.
                   The Gateway Pool auto-scales via HPA targeting 50-60% CPU utilization.</>
@@ -283,6 +339,7 @@ export function HowItWorksPage() {
                 borderClass="border-orange-500/40"
                 bgClass="bg-orange-500/5"
                 description="Two-tier collector setup so all spans of a trace reach the same sampling collector for intelligent keep/drop decisions."
+                onOpenDetail={() => handleOpenDetail('sampling-tier')}
                 detail={
                   <>The LB Exporter uses <code className="text-orange-300">loadbalancingexporter</code> with <code className="text-orange-300">routing_key: traceID</code> to
                   hash-route spans. The Sampling Collectors (<code className="text-orange-300">StatefulSet</code>) run the <code className="text-orange-300">tail_sampling</code> processor.</>
@@ -314,6 +371,7 @@ export function HowItWorksPage() {
                 borderClass="border-red-500/40"
                 bgClass="bg-red-500/5"
                 description="The file_storage extension enables a write-ahead log (WAL) on the collector's exporter sending queue. Data is persisted to disk so it survives collector crashes and restarts."
+                onOpenDetail={() => handleOpenDetail('persistent-queue')}
                 detail={
                   <>Configured on the exporter's <code className="text-red-300">sending_queue</code> with <code className="text-red-300">storage: file_storage</code>. 
                   Not a separate pipeline component — it's a resilience feature of the collector itself. Requires <code className="text-red-300">StatefulSet</code> with PVC in Kubernetes.</>
@@ -336,6 +394,7 @@ export function HowItWorksPage() {
                 borderClass="border-red-500/40"
                 bgClass="bg-red-500/5"
                 description="Dedicated collector pools on each side of Kafka for maximum durability. Survives hours of backend outages."
+                onOpenDetail={() => handleOpenDetail('kafka-buffer')}
                 detail={
                   <>Producer collectors receive via OTLP and write to Kafka topics. Consumer collectors read from Kafka
                   and forward via OTLP. This decouples ingestion from processing and enables replay and multi-consumer patterns.</>
@@ -489,6 +548,7 @@ function ModuleCard({
   description,
   detail,
   children,
+  onOpenDetail,
 }: {
   title: string;
   icon: React.ReactNode;
@@ -499,9 +559,13 @@ function ModuleCard({
   description: string;
   detail: React.ReactNode;
   children: React.ReactNode;
+  onOpenDetail?: () => void;
 }) {
   return (
-    <div className={`rounded-lg border border-dashed ${borderClass} ${bgClass} overflow-hidden`}>
+    <div
+      className={`rounded-lg border border-dashed ${borderClass} ${bgClass} overflow-hidden ${onOpenDetail ? 'cursor-pointer hover:border-solid transition-all' : ''}`}
+      onClick={onOpenDetail}
+    >
       <div className="p-4 pb-3">
         <div className="flex items-center gap-2 mb-2">
           {icon}
@@ -519,6 +583,9 @@ function ModuleCard({
 
       <div className="px-4 pb-4">
         <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">{detail}</p>
+        {onOpenDetail && (
+          <p className="text-[10px] text-[var(--otel-blue)] mt-2">Click to view details & reference config</p>
+        )}
       </div>
     </div>
   );
