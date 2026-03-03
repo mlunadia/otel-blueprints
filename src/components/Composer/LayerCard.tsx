@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Server, Box, Layers, Database, HardDrive, Zap, Globe, GitBranch, MinusCircle, Cpu, Flag } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check, Server, Box, Layers, Database, HardDrive, Zap, Globe, GitBranch, MinusCircle, Cpu, Flag, ExternalLink } from 'lucide-react';
 import { Layer, LayerType } from '../../data/layers';
 
 interface LayerCardProps {
@@ -55,7 +55,7 @@ export function LayerCard({ layer, layerType, index = 0 }: LayerCardProps) {
     setTimeout(() => setCopiedConfig(null), 2000);
   };
 
-  const hasConfigs = layer.configSnippets.agent || layer.configSnippets.gateway || layer.configSnippets.kubernetes;
+  const hasConfigs = layer.configSnippets.agent || layer.configSnippets.gateway;
 
   return (
     <motion.div
@@ -218,15 +218,7 @@ export function LayerCard({ layer, layerType, index = 0 }: LayerCardProps) {
                   />
                 )}
                 
-                {layer.configSnippets.kubernetes && (
-                  <ConfigSnippet
-                    title="Kubernetes Manifest"
-                    content={layer.configSnippets.kubernetes}
-                    configType="kubernetes"
-                    copiedConfig={copiedConfig}
-                    onCopy={handleCopyConfig}
-                  />
-                )}
+
               </div>
             )}
           </div>
@@ -234,6 +226,35 @@ export function LayerCard({ layer, layerType, index = 0 }: LayerCardProps) {
       )}
     </motion.div>
   );
+}
+
+function encodeForOtelbin(yaml: string): string {
+  const cleaned = yaml
+    .split('\n')
+    .filter(line => !line.trimStart().startsWith('#'))
+    .join('\n')
+    .replace(/^\n+/, '');
+
+  let encoded = '';
+  for (const ch of cleaned) {
+    switch (ch) {
+      case '\n': encoded += '*N'; break;
+      case ' ':  encoded += '_'; break;
+      case '#':  encoded += '*H'; break;
+      case '_':  encoded += '*_'; break;
+      case "'":  encoded += '*%22'; break;
+      case '(':  encoded += '*C'; break;
+      case ')':  encoded += '*D'; break;
+      case '$':  encoded += '*S'; break;
+      case '=':  encoded += '*E'; break;
+      default:   encoded += encodeURIComponent(ch); break;
+    }
+  }
+  return encoded + '%7E';
+}
+
+function isCollectorConfig(content: string): boolean {
+  return content.includes('receivers:') || content.includes('service:') || content.includes('exporters:');
 }
 
 interface ConfigSnippetProps {
@@ -246,6 +267,7 @@ interface ConfigSnippetProps {
 
 function ConfigSnippet({ title, content, configType, copiedConfig, onCopy }: ConfigSnippetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const showOtelbin = isCollectorConfig(content);
 
   return (
     <div className="rounded border border-[var(--border-color)] overflow-hidden">
@@ -255,6 +277,20 @@ function ConfigSnippet({ title, content, configType, copiedConfig, onCopy }: Con
       >
         <span className="text-sm text-[var(--text-primary)]">{title}</span>
         <div className="flex items-center gap-2">
+          {showOtelbin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const encoded = encodeForOtelbin(content);
+                window.open(`https://www.otelbin.io/#config=${encoded}`, '_blank');
+              }}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-[var(--text-secondary)] hover:text-[var(--otel-blue)] hover:bg-[var(--bg-secondary)] transition-colors"
+              title="View in OTelBin"
+            >
+              <ExternalLink size={12} />
+              <span>OTelBin</span>
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
