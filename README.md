@@ -1,83 +1,66 @@
 # OpenTelemetry Blueprints
 
-An interactive tool for generating OpenTelemetry reference architectures from composable layers. Select your environment, scale, collection needs, and resilience requirements — the tool composes a blueprint diagram from proven patterns and compatible components.
+An interactive tool that generates OpenTelemetry Collector reference architectures from your requirements. Select your environment, scale, collection needs, and resilience policy — get a composed blueprint diagram with reference configurations you can open directly in [OTelBin](https://www.otelbin.io).
 
-OpenTelemetry Blueprints are starting points, not turnkey deployments. Each blueprint is intended to be adapted to an organisation's requirements around scale, security, networking, compliance, and operational processes.
+**[Try it live](https://mlunadia.github.io/otel-blueprints/)**
 
-## Features
+> OpenTelemetry Blueprints are starting points, not turnkey deployments. Each blueprint is intended to be adapted to your organisation's requirements around scale, security, networking, compliance, and operational processes.
 
-- **Architecture Wizard** — toggle requirements (environment, data volume, collection capabilities, processing, resilience) and get a composed architecture in real time
-- **Visual Pipeline Diagrams** — dynamic diagrams that reflect the composed architecture, including edge collectors, gateways, load balancers, buffering layers, and backend destinations
-- **Volume-Aware Gateway Placement** — gateway replicas, node placement, and load balancer type adapt to Low / Medium / High data volume profiles
-- **Resilience Layers** — persistent queues (WAL) and Kafka buffering are added based on data loss policy
-- **Kubernetes & Host/VM Support** — architectures adapt to environment constraints such as serverless Kubernetes (no DaemonSets) and per-service isolation (sidecars)
-- **Complexity Scoring** — operational complexity is calculated based on the components in the architecture (Kafka, tail sampling, gateway tier, etc.)
-- **Explore & How It Works Pages** — browse individual OTel modules and understand the three-layer composition model (Edge, Processing, Resilience)
+## How It Works
 
-## Tech Stack
+### 1. Define your requirements
 
-- [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vite.dev/) for build and dev server
-- [Tailwind CSS 4](https://tailwindcss.com/) for styling
-- [Framer Motion](https://www.framer.com/motion/) for animations
-- [Lucide React](https://lucide.dev/) for icons
-- [Playwright](https://playwright.dev/) for end-to-end tests
+Toggle the capabilities you need — application traces, metrics, disk log collection, host metrics — and set your environment (Kubernetes or Host/VM), data volume, and resilience policy.
 
-## Getting Started
+![Requirements wizard](docs/screenshots/requirements.png)
+
+### 2. Get your blueprint
+
+Click **Build My Architecture** and get a composed architecture diagram with animated data flow, complexity scoring, and actionable recommendations. Download the diagram as an image or open the reference configs in OTelBin for validation.
+
+![Architecture result](docs/screenshots/architecture.png)
+
+### 3. Explore the building blocks
+
+Browse the composable modules that make up every blueprint — edge collectors, gateway pools, tail sampling tiers, persistent queues, and Kafka buffering — each with detailed reference configurations.
+
+![Blueprints page](docs/screenshots/blueprints.png)
+
+## What You Can Configure
+
+| Category | Options |
+|----------|---------|
+| **Environment** | Kubernetes, Host / VM |
+| **Application signals** | Logs (OTLP), Traces, Metrics |
+| **Infrastructure signals** | Disk Log Collection (filelog), Host Metrics |
+| **Data volume** | Low, Medium, High |
+| **Resilience** | Loss OK, Minimize Loss (WAL), Zero Loss (Kafka) |
+| **Processing** | Central policy, Multi-backend routing, Tail sampling |
+| **Constraints** | Managed containers (ECS/Fargate), Per-service isolation (sidecars) |
+
+## Architecture Layers
+
+Every blueprint is composed from three layers:
+
+- **Edge** — how telemetry enters the pipeline: DaemonSet Agent, Sidecar Agent, Host Agent, or Direct SDK
+- **Processing** — central processing when needed: Gateway Pool, Tail Sampling Tier with two-step pipeline (spanmetrics before sampling via forward connector)
+- **Resilience** — data durability: In-Memory Queues, Persistent Queues (WAL), or Kafka Buffer
+
+## Key Features
+
+- **Real-time composition** — architecture updates instantly as you toggle requirements
+- **Visual pipeline diagrams** — animated data flow with interactive component tooltips
+- **Reference configurations** — collector YAML configs with one-click [OTelBin](https://www.otelbin.io) integration for visualization and validation
+- **Smart defaults** — disk log collection enabled by default (the recommended production pattern for application logs via stdout → filelog receiver)
+- **Image export** — download your blueprint as a JPG with a descriptive filename
+- **Feedback loop** — submit feedback or report configuration issues directly as GitHub issues
+
+## Running Locally
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run linter
-npm run lint
 ```
-
-## Project Structure
-
-```
-src/
-├── data/
-│   ├── composer.ts          # Core composition engine — builds architectures from requirements
-│   ├── layers.ts            # Layer definitions (edge, processing, buffering modules)
-│   ├── decisionLevers.ts    # Slider and toggle definitions for the wizard UI
-│   └── components.ts        # OTel component metadata
-├── components/
-│   ├── Layout/              # Header, MainView (wizard), Sidebar
-│   ├── Composer/             # VisualPipelineDiagram, ComposedArchitectureView, LayerCard
-│   ├── Pages/                # HowItWorksPage, ExplorePage
-│   ├── Architecture/         # ArchitectureDiagram
-│   └── UI/                   # OTelLogo, ThemeToggle, CodeBlock
-├── context/
-│   └── AppContext.tsx        # Global state (requirements, current page)
-├── App.tsx
-└── main.tsx
-```
-
-## How Composition Works
-
-The composition engine (`src/data/composer.ts`) takes a set of requirements and produces a `ComposedArchitecture`:
-
-1. **Edge Layer** — determines which collectors sit closest to your applications (DaemonSet Agent, Sidecar Agent, Host Agent, or Direct SDK)
-2. **Processing Layer** — adds gateways, tail sampling tiers, or load balancers when requirements demand centralised processing
-3. **Resilience Layer** — enables persistent queues (WAL via `file_storage` extension) or Kafka buffering based on data loss policy
-
-The volume profile controls gateway sizing:
-
-| Volume | Replicas | Placement | Load Balancer |
-|--------|----------|-----------|---------------|
-| Low    | *(no gateway unless required)* | — | — |
-| Medium | 3–5 | Dedicated node pool, same cluster | Standard |
-| High   | 5–20+ | Dedicated pool or separate cluster | L7 |
 
 ## License
 
