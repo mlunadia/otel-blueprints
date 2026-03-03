@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useCallback, createContext, useContext, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, createContext, useContext, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Server, Database, Zap, Box, Monitor, Layers, Network, GitBranch, HardDrive } from 'lucide-react';
 import { ComposedArchitecture } from '../../data/composer';
@@ -551,7 +551,7 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
             connectorId="edge-out"
             icon={<CollectorIcon size={14} className="text-green-400" />}
             label="Host Agent"
-            sublabel="systemd service"
+            sublabel="OTel Collector — systemd service"
             colorClass="border-green-500/30 bg-green-500/5"
             tooltip={hostAgentLayer ? getLayerTooltip(hostAgentLayer) : undefined}
             delay={0.2}
@@ -587,7 +587,7 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
             connectorId={hasSidecar ? 'edge-out-ds' : 'edge-out'}
             icon={<CollectorIcon size={14} className="text-green-400" />}
             label="DaemonSet Agent"
-            sublabel="Per-node collector"
+            sublabel="OTel Collector — per node"
             colorClass="border-green-500/30 bg-green-500/5"
             tooltip={daemonSetLayer ? getLayerTooltip(daemonSetLayer) : undefined}
             delay={0.2}
@@ -619,7 +619,7 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
             connectorId={hasDaemonSet ? 'edge-out-sc' : 'edge-out'}
             icon={<CollectorIcon size={14} className="text-green-400" />}
             label="Sidecar Agent"
-            sublabel="Per-pod collector"
+            sublabel="OTel Collector — per pod"
             colorClass="border-green-500/30 bg-green-500/5"
             tooltip={sidecarLayer ? getLayerTooltip(sidecarLayer) : undefined}
             delay={0.25}
@@ -695,7 +695,7 @@ function ProcessingSection({
             connectorId="proc-kafka-producer"
             icon={<CollectorIcon size={14} className="text-red-400" />}
             label="Collector Pool"
-            sublabel="OTLP receiver → Kafka exporter"
+            sublabel="OTel Collector — Kafka producer"
             colorClass="border-red-500/30 bg-red-500/5"
             tooltip={{
               title: 'Kafka Producer Collectors',
@@ -728,7 +728,7 @@ function ProcessingSection({
             connectorId="proc-kafka-consumer"
             icon={<CollectorIcon size={14} className="text-red-400" />}
             label="Collector Pool"
-            sublabel="Kafka receiver → OTLP exporter"
+            sublabel="OTel Collector — Kafka consumer"
             colorClass="border-red-500/30 bg-red-500/5"
             tooltip={{
               title: 'Kafka Consumer Collectors',
@@ -778,7 +778,7 @@ function ProcessingSection({
               connectorId="proc-lb-exporter"
               icon={<CollectorIcon size={14} className="text-orange-400" />}
               label="LB Exporter"
-              sublabel="loadbalancingexporter (traceID)"
+              sublabel="OTel Collector — LB exporter"
               colorClass="border-orange-500/30 bg-orange-500/5"
               tooltip={{
                 title: 'Load-Balancing Exporter',
@@ -795,7 +795,7 @@ function ProcessingSection({
               connectorId="proc-sampling"
               icon={<CollectorIcon size={14} className="text-orange-400" />}
               label="Sampling Collectors"
-              sublabel="tail_sampling processor"
+              sublabel="OTel Collector — tail_sampling"
               colorClass="border-orange-500/30 bg-orange-500/5"
               tooltip={samplingLayer ? {
                 ...getLayerTooltip(samplingLayer),
@@ -827,7 +827,7 @@ function ProcessingSection({
             connectorId="proc-gateway"
             icon={<CollectorIcon size={14} className="text-orange-400" />}
             label="Gateway Pool"
-            sublabel={`${vp.replicas} replicas`}
+            sublabel={`OTel Collector — ${vp.replicas} replicas`}
             colorClass="border-orange-500/30 bg-orange-500/5"
             tooltip={gatewayLayer ? {
               ...getLayerTooltip(gatewayLayer),
@@ -935,16 +935,20 @@ export function VisualPipelineDiagram({ architecture }: VisualPipelineDiagramPro
   const [registry] = useState(() => new Map<string, HTMLElement>());
   const [, forceUpdate] = useState(0);
 
-  const ctxValue: ConnectorRegistryCtx = {
-    register: (id, el) => {
-      registry.set(id, el);
-      forceUpdate(n => n + 1);
-    },
-    unregister: (id) => {
-      registry.delete(id);
-      forceUpdate(n => n + 1);
-    },
-  };
+  const register = useCallback((id: string, el: HTMLElement) => {
+    registry.set(id, el);
+    forceUpdate(n => n + 1);
+  }, [registry]);
+
+  const unregister = useCallback((id: string) => {
+    registry.delete(id);
+    forceUpdate(n => n + 1);
+  }, [registry]);
+
+  const ctxValue = useMemo<ConnectorRegistryCtx>(() => ({
+    register,
+    unregister,
+  }), [register, unregister]);
 
   const connectors: ConnectorDef[] = [];
 
@@ -999,43 +1003,45 @@ export function VisualPipelineDiagram({ architecture }: VisualPipelineDiagramPro
   return (
     <ConnectorRegistryContext.Provider value={ctxValue}>
       <div>
-        <div ref={containerRef} className="bg-[var(--bg-tertiary)] rounded-xl p-4 md:p-6 overflow-x-auto relative">
-          <div className="flex items-center justify-center gap-8 md:gap-12 min-w-max relative" style={{ zIndex: 2 }}>
-            {processingInCluster ? (
-              <EnvironmentContainer
-                label="Kubernetes Cluster"
-                icon={<KubernetesIcon size={14} className="text-blue-400" />}
-                colorClass="border-blue-500/40"
-                bgClass="bg-blue-500/5"
-                delay={0}
-              >
-                <div className="flex items-center gap-6">
-                  <div><EdgeEnvironment architecture={architecture} bare /></div>
-                  <div><ProcessingSection architecture={architecture} inContainer={false} /></div>
-                </div>
-              </EnvironmentContainer>
-            ) : (
-              <>
-                <EdgeEnvironment architecture={architecture} />
-                {hasProcessing && (
-                  <ProcessingSection
-                    architecture={architecture}
-                    inContainer={needsSeparateProcessingEnv}
-                  />
-                )}
-              </>
-            )}
+        <div className="bg-[var(--bg-tertiary)] rounded-xl p-4 md:p-6 overflow-x-auto">
+          <div ref={containerRef} className="min-w-max relative">
+            <div className="flex items-center justify-center gap-8 md:gap-12 relative" style={{ zIndex: 2 }}>
+              {processingInCluster ? (
+                <EnvironmentContainer
+                  label="Kubernetes Cluster"
+                  icon={<KubernetesIcon size={14} className="text-blue-400" />}
+                  colorClass="border-blue-500/40"
+                  bgClass="bg-blue-500/5"
+                  delay={0}
+                >
+                  <div className="flex items-center gap-6">
+                    <div><EdgeEnvironment architecture={architecture} bare /></div>
+                    <div><ProcessingSection architecture={architecture} inContainer={false} /></div>
+                  </div>
+                </EnvironmentContainer>
+              ) : (
+                <>
+                  <EdgeEnvironment architecture={architecture} />
+                  {hasProcessing && (
+                    <ProcessingSection
+                      architecture={architecture}
+                      inContainer={needsSeparateProcessingEnv}
+                    />
+                  )}
+                </>
+              )}
 
-            <BackendSection />
+              <BackendSection />
+            </div>
+
+            <ConnectorOverlay
+              containerRef={containerRef}
+              connectors={connectors}
+              registry={registry}
+            />
+
+            <DiagramLegend hasKafka={hasKafka} hasLoadBalancer={hasLoadBalancer} hasSampling={hasSampling} />
           </div>
-
-          <ConnectorOverlay
-            containerRef={containerRef}
-            connectors={connectors}
-            registry={registry}
-          />
-
-          <DiagramLegend hasKafka={hasKafka} hasLoadBalancer={hasLoadBalancer} hasSampling={hasSampling} />
         </div>
       </div>
     </ConnectorRegistryContext.Provider>

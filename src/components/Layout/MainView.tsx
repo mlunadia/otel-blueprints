@@ -276,7 +276,7 @@ export function MainView() {
               className="flex flex-col items-center gap-4"
             >
               <button
-                onClick={() => setShowResults(true)}
+                onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setShowResults(true); }}
                 className="flex items-center gap-2 px-8 py-4 bg-[#425cc7] hover:bg-[#3549a8] text-white font-semibold rounded-lg transition-colors text-lg"
               >
                 Build My Architecture

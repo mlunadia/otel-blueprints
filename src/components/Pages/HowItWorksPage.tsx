@@ -207,7 +207,7 @@ export function HowItWorksPage() {
                   <MiniComponentBox
                     icon={<CollectorIcon size={14} className="text-green-400" />}
                     label="DaemonSet Agent"
-                    sublabel="Per-node collector"
+                    sublabel="OTel Collector — per node"
                     colorClass="border-green-500/30 bg-green-500/5"
                   />
                 </MiniNodeBox>
@@ -239,7 +239,7 @@ export function HowItWorksPage() {
                   <MiniComponentBox
                     icon={<CollectorIcon size={14} className="text-green-400" />}
                     label="Sidecar Agent"
-                    sublabel="Per-pod collector"
+                    sublabel="OTel Collector — per pod"
                     colorClass="border-green-500/30 bg-green-500/5"
                   />
                 </MiniNodeBox>
@@ -271,7 +271,7 @@ export function HowItWorksPage() {
                   <MiniComponentBox
                     icon={<CollectorIcon size={14} className="text-green-400" />}
                     label="Host Agent"
-                    sublabel="systemd service"
+                    sublabel="OTel Collector — systemd service"
                     colorClass="border-green-500/30 bg-green-500/5"
                   />
                 </MiniNodeBox>
@@ -295,7 +295,7 @@ export function HowItWorksPage() {
                 <MiniComponentBox
                   icon={<CollectorIcon size={14} className="text-orange-400" />}
                   label="Gateway Pool"
-                  sublabel="Central processing (3+ replicas)"
+                  sublabel="OTel Collector — 3+ replicas"
                   colorClass="border-orange-500/30 bg-orange-500/5"
                 />
               </ModuleCard>
@@ -325,7 +325,7 @@ export function HowItWorksPage() {
                 <MiniComponentBox
                   icon={<CollectorIcon size={14} className="text-orange-400" />}
                   label="Gateway Pool"
-                  sublabel="Central processing"
+                  sublabel="OTel Collector — central processing"
                   colorClass="border-orange-500/30 bg-orange-500/5"
                 />
               </ModuleCard>
@@ -349,14 +349,14 @@ export function HowItWorksPage() {
                   <MiniComponentBox
                     icon={<CollectorIcon size={14} className="text-orange-400" />}
                     label="LB Exporter"
-                    sublabel="loadbalancingexporter (traceID)"
+                    sublabel="OTel Collector — LB exporter"
                     colorClass="border-orange-500/30 bg-orange-500/5"
                   />
                   <MiniFlowConnector />
                   <MiniComponentBox
                     icon={<CollectorIcon size={14} className="text-orange-400" />}
                     label="Sampling Collectors"
-                    sublabel="tail_sampling processor"
+                    sublabel="OTel Collector — tail_sampling"
                     colorClass="border-orange-500/30 bg-orange-500/5"
                   />
                 </MiniNodeBox>
@@ -380,7 +380,7 @@ export function HowItWorksPage() {
                 <MiniComponentBox
                   icon={<CollectorIcon size={14} className="text-red-400" />}
                   label="Collector (Gateway)"
-                  sublabel="sending_queue → file_storage (WAL on PVC)"
+                  sublabel="OTel Collector — WAL on PVC"
                   colorClass="border-red-500/30 bg-red-500/5"
                 />
               </ModuleCard>
@@ -403,7 +403,7 @@ export function HowItWorksPage() {
                 <MiniComponentBox
                   icon={<CollectorIcon size={14} className="text-red-400" />}
                   label="Collector Pool"
-                  sublabel="OTLP receiver → Kafka exporter"
+                  sublabel="OTel Collector — Kafka producer"
                   colorClass="border-red-500/30 bg-red-500/5"
                 />
                 <MiniFlowConnector dashed />
@@ -417,7 +417,7 @@ export function HowItWorksPage() {
                 <MiniComponentBox
                   icon={<CollectorIcon size={14} className="text-red-400" />}
                   label="Collector Pool"
-                  sublabel="Kafka receiver → OTLP exporter"
+                  sublabel="OTel Collector — Kafka consumer"
                   colorClass="border-red-500/30 bg-red-500/5"
                 />
               </ModuleCard>
