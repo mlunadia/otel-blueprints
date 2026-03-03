@@ -587,48 +587,49 @@ function CollectionBox({
           const SignalIcon = Icons[signal.icon as keyof typeof Icons] as React.ComponentType<{ size?: number; className?: string }>;
           const isEnabled = requirements[signal.id as keyof Requirements] as boolean;
           const label = signal.name;
-          const isAutoLinked = signal.id === 'needsInfraLogs' && isEnabled && requirements.needsAppLogs;
+          const isSuperseded = signal.id === 'needsAppLogs' && requirements.needsInfraLogs;
+          const isEffectivelyDisabled = disabled || isSuperseded;
           
           return (
-            <button
-              key={signal.id}
-              onClick={() => {
-                if (disabled) return;
-                const newValue = !isEnabled;
-                setRequirement(signal.id as keyof Requirements, newValue as never);
-                if (signal.id === 'needsAppLogs' && newValue && !requirements.managedContainers) {
-                  setRequirement('needsInfraLogs', true as never);
-                }
-              }}
-              disabled={disabled}
-              className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
-                disabled
-                  ? 'cursor-not-allowed'
-                  : 'hover:bg-[var(--bg-tertiary)]'
-              }`}
-            >
-              <div className={`${isEnabled && !disabled ? colors.text : 'text-[var(--text-secondary)]'}`}>
-                {SignalIcon && <SignalIcon size={18} />}
-              </div>
-              <span className={`text-xs ${isEnabled && !disabled ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
-                {label}
-              </span>
-              <div
-                className={`w-8 h-4 rounded-full transition-colors relative ${
-                  isEnabled && !disabled ? colors.toggle : 'bg-[var(--bg-tertiary)]'
+            <div key={signal.id} className="relative group flex flex-col items-center">
+              <button
+                onClick={() => {
+                  if (isEffectivelyDisabled) return;
+                  const newValue = !isEnabled;
+                  setRequirement(signal.id as keyof Requirements, newValue as never);
+                  if (signal.id === 'needsInfraLogs' && newValue) {
+                    setRequirement('needsAppLogs', false as never);
+                  }
+                }}
+                className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
+                  isEffectivelyDisabled
+                    ? 'cursor-default opacity-40'
+                    : 'hover:bg-[var(--bg-tertiary)]'
                 }`}
               >
-                <motion.div
-                  animate={{ x: isEnabled && !disabled ? 16 : 2 }}
-                  className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow"
-                />
-              </div>
-              {isAutoLinked && (
-                <span className="text-[9px] text-[var(--text-secondary)] opacity-70 mt-0.5">
-                  via App Logs
+                <div className={`${isEnabled && !isEffectivelyDisabled ? colors.text : 'text-[var(--text-secondary)]'}`}>
+                  {SignalIcon && <SignalIcon size={18} />}
+                </div>
+                <span className={`text-xs ${isEnabled && !isEffectivelyDisabled ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                  {label}
                 </span>
+                <div
+                  className={`w-8 h-4 rounded-full transition-colors relative ${
+                    isEnabled && !isEffectivelyDisabled ? colors.toggle : 'bg-[var(--bg-tertiary)]'
+                  }`}
+                >
+                  <motion.div
+                    animate={{ x: isEnabled && !isEffectivelyDisabled ? 16 : 2 }}
+                    className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow"
+                  />
+                </div>
+              </button>
+              {isSuperseded && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[10px] text-[var(--text-secondary)] leading-relaxed shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">
+                  Recommended: collect logs via stdout → disk → filelog receiver. Disable Node Log Collection to use SDK OTLP instead.
+                </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

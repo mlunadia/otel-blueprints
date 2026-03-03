@@ -70,7 +70,7 @@ export const defaultRequirements: Requirements = {
   environmentType: 'kubernetes',
   dataVolume: 0,
   // Application collection - all on by default
-  needsAppLogs: true,
+  needsAppLogs: false,
   needsAppTraces: true,
   needsAppMetrics: true,
   // Infrastructure collection
