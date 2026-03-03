@@ -73,8 +73,8 @@ export const defaultRequirements: Requirements = {
   needsAppLogs: true,
   needsAppTraces: true,
   needsAppMetrics: true,
-  // Infrastructure collection - off by default
-  needsInfraLogs: false,
+  // Infrastructure collection
+  needsInfraLogs: true,
   needsInfraMetrics: false,
   // Processing
   needsCentralPolicy: false,
@@ -164,12 +164,19 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
         'Host agent runs as a systemd service collecting host metrics (hostmetrics receiver) ' +
         'and local logs (filelog receiver). Applications export to localhost:4317.'
       );
+      if (requirements.needsInfraLogs && requirements.needsAppLogs) {
+        arch.recommendations.push(
+          'Application logs written to stdout/stderr are captured as log files on disk. ' +
+          'The host agent tails these files with the filelog receiver, providing structured ' +
+          'ingestion, batching, and retry outside the application lifecycle.'
+        );
+      }
     } else {
       arch.edge.push(getLayer('direct-sdk')!);
       if (requirements.needsAppLogs) {
         arch.recommendations.push(
-          'It is recommended to write logs to stdout and use a DaemonSet OpenTelemetry Collector to tail container ' +
-          'log files with the filelog receiver and export via OTLP, ensuring buffering, batching, retry, and ' +
+          'It is recommended to write logs to stdout and use an OpenTelemetry Collector (host agent) to tail log ' +
+          'files with the filelog receiver and export via OTLP, ensuring buffering, batching, retry, and ' +
           'backpressure outside the application lifecycle.'
         );
       }
@@ -194,8 +201,15 @@ function determineEdgeLayers(requirements: Requirements, arch: ComposedArchitect
       arch.edge.push(getLayer('daemonset-agent')!);
       if (requirements.needsInfraLogs && requirements.needsInfraMetrics) {
         arch.recommendations.push(
-          'DaemonSet agent will collect both infrastructure logs (filelog receiver) and ' +
+          'DaemonSet agent will collect both node logs (filelog receiver) and ' +
           'host metrics (hostmetrics receiver) from each node.'
+        );
+      }
+      if (requirements.needsInfraLogs && requirements.needsAppLogs) {
+        arch.recommendations.push(
+          'Application logs written to stdout are stored as container log files on each node. ' +
+          'The DaemonSet agent tails these files with the filelog receiver, providing structured ' +
+          'ingestion, batching, and retry outside the application lifecycle.'
         );
       }
     }

@@ -586,12 +586,20 @@ function CollectionBox({
         {signals.map((signal) => {
           const SignalIcon = Icons[signal.icon as keyof typeof Icons] as React.ComponentType<{ size?: number; className?: string }>;
           const isEnabled = requirements[signal.id as keyof Requirements] as boolean;
-          const label = signal.name.replace('Application ', '').replace('Infrastructure ', '');
+          const label = signal.name;
+          const isAutoLinked = signal.id === 'needsInfraLogs' && isEnabled && requirements.needsAppLogs;
           
           return (
             <button
               key={signal.id}
-              onClick={() => !disabled && setRequirement(signal.id as keyof Requirements, !isEnabled as never)}
+              onClick={() => {
+                if (disabled) return;
+                const newValue = !isEnabled;
+                setRequirement(signal.id as keyof Requirements, newValue as never);
+                if (signal.id === 'needsAppLogs' && newValue && !requirements.managedContainers) {
+                  setRequirement('needsInfraLogs', true as never);
+                }
+              }}
               disabled={disabled}
               className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
                 disabled
@@ -615,6 +623,11 @@ function CollectionBox({
                   className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow"
                 />
               </div>
+              {isAutoLinked && (
+                <span className="text-[9px] text-[var(--text-secondary)] opacity-70 mt-0.5">
+                  via App Logs
+                </span>
+              )}
             </button>
           );
         })}
