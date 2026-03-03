@@ -61,7 +61,7 @@ export function HowItWorksPage() {
                 </button>
               </div>
               <div className="p-4">
-                <LayerCard layer={selectedLayer} layerType={selectedLayer.type} />
+                <LayerCard layer={selectedLayer} layerType={selectedLayer.type} defaultExpanded />
               </div>
             </motion.div>
           </motion.div>

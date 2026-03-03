@@ -571,18 +571,38 @@ function EdgeEnvironment({ architecture, bare }: { architecture: ComposedArchite
           delay={0.1}
           scaleHint="× N nodes"
         >
-          <ComponentBox
-            icon={<Zap size={14} className="text-green-400" />}
-            label="Application"
-            sublabel="OTel SDK"
-            colorClass="border-green-500/30 bg-green-500/5"
-            tooltip={{
-              title: 'Application',
-              description: 'Your services instrumented with the OpenTelemetry SDK, exporting to the DaemonSet agent via OTLP on localhost:4317.',
-            }}
-            delay={0.15}
-          />
-          <VerticalFlowConnector label="OTLP" delay={0.17} />
+          {!hasSidecar && (
+            <>
+              <ComponentBox
+                icon={<Zap size={14} className="text-green-400" />}
+                label="Application"
+                sublabel="OTel SDK"
+                colorClass="border-green-500/30 bg-green-500/5"
+                tooltip={{
+                  title: 'Application',
+                  description: 'Your services instrumented with the OpenTelemetry SDK, exporting to the DaemonSet agent via OTLP on localhost:4317.',
+                }}
+                delay={0.15}
+              />
+              <VerticalFlowConnector label="OTLP" delay={0.17} />
+            </>
+          )}
+          {hasSidecar && (
+            <>
+              <ComponentBox
+                icon={<HardDrive size={14} className="text-green-400" />}
+                label="Node Telemetry"
+                sublabel="Disk logs, host metrics"
+                colorClass="border-green-500/30 bg-green-500/5"
+                tooltip={{
+                  title: 'Node Telemetry Sources',
+                  description: 'Container log files on disk (tailed via filelog receiver) and host-level metrics (hostmetrics receiver). Collected independently — applications do not send OTLP to this agent.',
+                }}
+                delay={0.15}
+              />
+              <VerticalFlowConnector delay={0.17} />
+            </>
+          )}
           <ComponentBox
             connectorId={hasSidecar ? 'edge-out-ds' : 'edge-out'}
             icon={<CollectorIcon size={14} className="text-green-400" />}

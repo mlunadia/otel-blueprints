@@ -7,6 +7,7 @@ interface LayerCardProps {
   layer: Layer;
   layerType: LayerType;
   index?: number;
+  defaultExpanded?: boolean;
 }
 
 // Icon mapping
@@ -42,8 +43,8 @@ const layerTypeColors: Record<LayerType, { border: string; bg: string; badge: st
   },
 };
 
-export function LayerCard({ layer, layerType, index = 0 }: LayerCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function LayerCard({ layer, layerType, index = 0, defaultExpanded = false }: LayerCardProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [copiedConfig, setCopiedConfig] = useState<string | null>(null);
 
   const colors = layerTypeColors[layerType];
@@ -263,10 +264,11 @@ interface ConfigSnippetProps {
   configType: string;
   copiedConfig: string | null;
   onCopy: (configType: string, content: string) => void;
+  defaultOpen?: boolean;
 }
 
-function ConfigSnippet({ title, content, configType, copiedConfig, onCopy }: ConfigSnippetProps) {
-  const [isOpen, setIsOpen] = useState(false);
+function ConfigSnippet({ title, content, configType, copiedConfig, onCopy, defaultOpen = false }: ConfigSnippetProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const showOtelbin = isCollectorConfig(content);
 
   return (
